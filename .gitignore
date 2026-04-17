@@ -16,3 +16,8 @@ bin/
 obj/ 
 _pycache_/ 
 *.pyc 
+.vs/ 
+bin/ 
+obj/ 
+_pycache_/ 
+*.pyc 
