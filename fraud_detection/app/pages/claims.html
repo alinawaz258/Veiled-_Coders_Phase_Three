@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GigShield | Forensic Claims</title>
+    <meta name="description"
+        content="Submit parametric disruption claims with real-time GPS telemetry and oracle consensus validation.">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        .oracle-scan-panel {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 242, 255, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .oracle-scan-panel .scan-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .oracle-scan-panel .scan-row:last-child {
+            border-bottom: none;
+        }
+
+        .oracle-scan-panel .scan-label {
+            color: #666;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.08em;
+        }
+
+        .oracle-scan-panel .scan-value {
+            color: var(--neon-teal);
+            font-weight: 600;
+        }
+
+        .oracle-scan-panel .scan-value.amber {
+            color: var(--neon-amber);
+        }
+
+        .oracle-scan-panel .scan-value.crimson {
+            color: var(--neon-crimson);
+        }
+
+        .scan-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 242, 255, 0.1);
+        }
+
+        .scan-pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--neon-teal);
+            box-shadow: 0 0 8px var(--neon-teal);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+        }
+
+        .scan-title {
+            font-size: 0.75rem;
+            color: var(--neon-teal);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .can-claim-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+        }
+
+        .can-claim-badge.yes {
+            background: rgba(0, 242, 255, 0.1);
+            color: var(--neon-teal);
+            border: 1px solid var(--neon-teal);
+        }
+
+        .can-claim-badge.no {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--neon-crimson);
+            border: 1px solid var(--neon-crimson);
+        }
+
+        .verdict-entry {
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.78rem;
+            border-left: 3px solid;
+            background: rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        .verdict-entry.approved {
+            border-color: var(--neon-teal);
+        }
+
+        .verdict-entry.denied {
+            border-color: var(--neon-crimson);
+        }
+
+        .verdict-entry .verdict-id {
+            font-size: 0.7rem;
+            color: #555;
+            margin-bottom: 4px;
+        }
+
+        .verdict-entry .verdict-status {
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .verdict-entry .verdict-reason {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .verdict-entry .verdict-payout {
+            color: var(--neon-amber);
+            margin-top: 6px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #scan-spinner {
+            display: none;
+            text-align: center;
+            color: var(--neon-amber);
+            font-family: 'DM Mono';
+            font-size: 0.8rem;
+            padding: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="cockpit-header">
+        <div class="brand">GIGSHIELD FORENSIC</div>
+        <nav class="nav-links">
+            <a href="/">HOME</a>
+            <a href="/dashboard">DASHBOARD</a>
+            <a href="/claims" class="active">CLAIMS</a>
+            <a href="/policy">POLICY</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Top Metrics Row -->
+        <div class="dashboard-grid animate-up" id="metric-cards" style="animation-delay: 0.1s;">
+            <!-- Populated by app.js -->
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; margin-top: 20px;">
+            <!-- LEFT: Claim Submission Form -->
+            <div class="panel animate-up" style="animation-delay: 0.2s;">
+                <h3 style="margin-bottom: 20px;">Forensic Claim Inquiry</h3>
+                <form id="claim-form" class="forensic-form">
+                    <div class="form-group">
+                        <label>Driver ID</label>
+                        <input type="text" name="driver_id" id="input-driver-id" class="form-control"
+                            placeholder="e.g., DRV-MUM01" required>
+                    </div>
+
+                    <!-- GPS Status Block -->
+                    <div class="form-group"
+                        style="background: rgba(0,0,0,0.4); border: 1px solid var(--panel-border); border-radius: 12px; padding: 15px; box-shadow: inset 0 2px 15px rgba(0,0,0,0.6);">
+                        <label style="margin-bottom: 5px;">HARDWARE GPS STATUS</label>
+                        <div id="gps-status-display"
+                            style="font-family: 'DM Mono'; font-size: 0.95rem; color: var(--neon-amber);">
+                            ⏳ ACQUIRING SECURE SATELLITE LOCK...
+                        </div>
+                    </div>
+
+                    <!-- Live Oracle Scan Panel -->
+                    <div class="oracle-scan-panel" id="oracle-scan-panel" style="display:none; margin-top: 15px;">
+                        <div class="scan-header">
+                            <div class="scan-pulse"></div>
+                            <div class="scan-title">Live Oracle Scan — Current Conditions</div>
+                        </div>
+                        <div id="scan-spinner">⏳ QUERYING OPEN-METEO ORACLE...</div>
+                        <div id="scan-results" style="display:none;">
+                            <div class="scan-row">
+                                <span class="scan-label">Location</span>
+                                <span class="scan-value" id="scan-location">—</span>
+                            </div>
+                            <div class="scan-row">
+                                <span class="scan-label">Precipitation</span>
+                                <span class="scan-value" id="scan-precip">—</span>
+                            </div>
+                            <div class="scan-row">
+                                <span class="scan-label">Wind Speed</span>
+                                <span class="scan-value" id="scan-wind">—</span>
+                            </div>
+                            <div class="scan-row">
+                                <span class="scan-label">Detected Condition</span>
+                                <span class="scan-value amber" id="scan-condition">—</span>
+                            </div>
+                            <div class="scan-row">
+                                <span class="scan-label">Social Disruption</span>
+                                <span class="scan-value" id="scan-social">—</span>
+                            </div>
+                            <div class="scan-row">
+                                <span class="scan-label">Traffic Congestion</span>
+                                <span class="scan-value" id="scan-traffic">—</span>
+                            </div>
+                            <div class="scan-row">
+                                <span class="scan-label">Claimable Event</span>
+                                <span id="scan-can-claim">—</span>
+                            </div>
+                            <div class="scan-row">
+                                <span class="scan-label">Est. Payout</span>
+                                <span class="scan-value amber" id="scan-payout">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label>Disruption Category Claimed</label>
+                        <select name="category" id="input-category" class="form-control">
+                            <option value="Extreme Rain Alert">EXTREME RAIN ALERT (₹420/HR)</option>
+                            <option value="Severe Traffic Gridlock">SEVERE TRAFFIC GRIDLOCK (₹300/HR)</option>
+                            <option value="Social Disruption / Active Event">SOCIAL DISRUPTION / ACTIVE EVENT (₹500/HR)
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Geotagged Photo Evidence (Optional)</label>
+                        <input type="file" id="photo-upload" name="photo" accept="image/*" capture="environment"
+                            class="form-control" style="cursor: pointer; padding: 12px 20px;">
+                    </div>
+                    <button type="submit" id="submit-btn" class="btn-primary">INITIATE CONSENSUS CHECK</button>
+                    <div id="claim-output" style="margin-top: 15px; font-family: 'DM Mono'; font-size: 0.85rem;"></div>
+                </form>
+            </div>
+
+            <!-- RIGHT: Verdicts + Log -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <!-- Forensic Verdict Ledger -->
+                <div class="panel animate-up" style="animation-delay: 0.3s; flex: 1;">
+                    <h3 style="margin-bottom: 15px;">Forensic Verdict Ledger</h3>
+                    <div id="verdict-ledger" style="max-height: 320px; overflow-y: auto;">
+                        <div
+                            style="color: var(--text-muted); font-family: 'DM Mono'; font-size: 0.8rem; text-align: center; padding: 20px;">
+                            No verdicts yet. Submit a claim to initialize the ledger.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Claims Table -->
+                <div class="panel animate-up" style="animation-delay: 0.4s;">
+                    <h3 style="margin-bottom: 15px;">Recent Claims Feed</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="forensic-table">
+                            <thead>
+                                <tr>
+                                    <th>CLAIM ID</th>
+                                    <th>DRIVER</th>
+                                    <th>STATUS</th>
+                                    <th>ORACLE</th>
+                                    <th>SOCIAL</th>
+                                    <th>TRAFFIC</th>
+                                    <th>SATELLITE</th>
+                                    <th>PAYOUT (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="claim-rows">
+                                <!-- Populated by app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Forensic Logs -->
+                <div class="panel animate-up" style="animation-delay: 0.5s;">
+                    <h3 style="margin-bottom: 15px;">Live Forensic Logs</h3>
+                    <div class="forensic-log" id="forensic-logs">
+                        <div class="log-entry"><span class="log-timestamp">[BOOT]</span> <span class="log-msg">SYSTEM:
+                                Forensic Auditor initialized.</span></div>
+                        <div class="log-entry"><span class="log-timestamp">[BOOT]</span> <span class="log-msg">GPS:
+                                Acquiring satellite lock...</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

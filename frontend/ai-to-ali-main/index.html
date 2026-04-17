@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GigShield Client</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 24px auto; padding: 0 16px; }
+    h1 { margin-bottom: 8px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    label { display: flex; flex-direction: column; font-size: 14px; gap: 4px; }
+    input { padding: 8px; }
+    button { margin-top: 12px; padding: 10px 14px; cursor: pointer; }
+    pre { background: #111; color: #eaeaea; padding: 12px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>GigShield Risk Client</h1>
+  <p>Client app calls backend <code>/risk/score</code> through this app’s <code>/api/risk/score</code> endpoint.</p>
+
+  <form id="riskForm" class="grid">
+    <label>City <input name="city" value="Chennai" /></label>
+    <label>Platform <input name="platform" value="Zepto" /></label>
+    <label>Avg Daily Income <input name="avg_daily_income" type="number" value="800" step="0.01" /></label>
+    <label>Weekly Earnings <input name="weekly_earnings" type="number" value="4800" step="0.01" /></label>
+    <label>Avg Work Hours <input name="avg_work_hours" type="number" value="8" step="0.1" /></label>
+    <label>Deliveries/Day <input name="deliveries_per_day" type="number" value="22" /></label>
+    <label>Rainfall Forecast (mm) <input name="rainfall_forecast_mm" type="number" value="65" step="0.1" /></label>
+    <label>Temperature (°C) <input name="temperature_forecast_c" type="number" value="41" step="0.1" /></label>
+    <label>AQI Forecast <input name="aqi_forecast" type="number" value="280" step="0.1" /></label>
+    <label>Flood Risk (0-1) <input name="flood_risk" type="number" value="0.6" step="0.01" /></label>
+    <label>Traffic Index (0-1) <input name="traffic_index" type="number" value="0.5" step="0.01" /></label>
+    <label>Historical Disruption Rate (0-1) <input name="historical_disruption_rate" type="number" value="0.4" step="0.01" /></label>
+    <label>Active Days/Week <input name="active_days_per_week" type="number" value="6" /></label>
+    <label>Weeks on Platform <input name="weeks_on_platform" type="number" value="12" /></label>
+    <label>Curfew Risk (0-1) <input name="curfew_risk" type="number" value="0" step="0.01" /></label>
+    <label>Strike Risk (0-1) <input name="strike_risk" type="number" value="0" step="0.01" /></label>
+    <label>Coverage Month (1-12) <input name="coverage_month" type="number" value="6" /></label>
+  </form>
+
+  <button id="submitBtn">Score Risk</button>
+
+  <h3>Key Results</h3>
+  <pre id="summary">No result yet.</pre>
+
+  <h3>Mapped Output</h3>
+  <pre id="output">Submit to view response…</pre>
+
+  <script>
+    const form = document.getElementById('riskForm');
+    const output = document.getElementById('output');
+    const summary = document.getElementById('summary');
+
+    document.getElementById('submitBtn').addEventListener('click', async () => {
+      const data = Object.fromEntries(new FormData(form).entries());
+      const numericFields = [
+        'avg_daily_income','weekly_earnings','avg_work_hours','deliveries_per_day',
+        'rainfall_forecast_mm','temperature_forecast_c','aqi_forecast','flood_risk',
+        'traffic_index','historical_disruption_rate','active_days_per_week',
+        'weeks_on_platform','curfew_risk','strike_risk','coverage_month'
+      ];
+      for (const key of numericFields) {
+        if (data[key] === '' || data[key] == null) continue;
+        data[key] = Number(data[key]);
+      }
+      if (!data.weeks_on_platform) data.weeks_on_platform = null;
+      if (!data.coverage_month) data.coverage_month = null;
+
+      output.textContent = 'Loading...';
+      summary.textContent = 'Loading...';
+
+      try {
+        const res = await fetch('/api/risk/score', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const body = await res.json();
+        if (!res.ok) {
+          output.textContent = JSON.stringify({ error: body }, null, 2);
+          summary.textContent = 'Request failed. See raw output below.';
+          return;
+        }
+
+        const mapped = {
+          city: body.city,
+          platform: body.platform,
+          risk_level: body.risk_level,
+          disruption_probability: body.disruption_probability,
+          ml_probability: body.ml_probability,
+          fraud_score: body.fraud_score,
+          fraud_flag: body.fraud_flag,
+          premium_total_inr: body?.premium_breakdown?.total_premium_inr,
+          expected_loss_inr: body.expected_loss_inr,
+          seasonal_context: body?.seasonal_pricing?.season,
+          model_version: body.model_version
+        };
+        summary.textContent = JSON.stringify(mapped, null, 2);
+        output.textContent = JSON.stringify(body, null, 2);
+      } catch (err) {
+        output.textContent = String(err);
+        summary.textContent = 'Network error';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Rider Login | GigShield AI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#0d9488",
+                        primarySoft: "#d7f3ef",
+                        ink: "#0b1a19",
+                        muted: "#4b5a58",
+                        paper: "#f9fafb",
+                    },
+                    borderRadius: {
+                        xl: "1.5rem",
+                        full: "9999px",
+                    },
+                    fontFamily: {
+                        sans: ["Sora", "sans-serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Sora', sans-serif;
+            background: radial-gradient(circle at 10% 20%, rgba(13, 148, 136, 0.15), transparent 45%),
+                        radial-gradient(circle at 90% 10%, rgba(255, 183, 77, 0.18), transparent 40%),
+                        #f6f7f9;
+            color: #0b1a19;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(13, 148, 136, 0.08);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <main class="min-h-screen flex items-center justify-center px-6 py-16">
+        <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
+            <section class="space-y-6">
+                <a href="index.html" class="inline-flex items-center gap-2 text-[0.65rem] font-black uppercase tracking-widest text-muted hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-sm">arrow_back</span>
+                    Back to landing
+                </a>
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-primarySoft text-primary text-[0.65rem] font-extrabold uppercase tracking-[0.2em] rounded-full">
+                    Rider Portal
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight">Sign in to your rider workspace.</h1>
+                <p class="text-base text-muted max-w-md">
+                    Track your protections, file claims, and manage payouts with a quick sign-in.
+                </p>
+                <div class="flex items-center gap-3 text-sm text-muted">
+                    <span class="material-symbols-outlined text-primary">shield</span>
+                    Secure demo portal for GigShield AI riders.
+                </div>
+            </section>
+
+            <section class="glass-card rounded-2xl p-8 shadow-xl">
+                <form id="userLoginForm" class="space-y-5">
+                    <div class="space-y-2">
+                        <label class="text-[0.65rem] font-extrabold uppercase tracking-widest text-muted">Rider Name</label>
+                        <input id="riderNameInput" type="text" placeholder="e.g. Ananya Iyer" class="w-full rounded-xl bg-white border border-slate-200 px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40" required />
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[0.65rem] font-extrabold uppercase tracking-widest text-muted">Rider ID</label>
+                        <input id="riderIdInput" type="text" placeholder="DRV-CHN04" class="w-full rounded-xl bg-white border border-slate-200 px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40" />
+                        <p class="text-[0.6rem] text-muted">Optional. Used to tag your claims in demo mode.</p>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[0.65rem] font-extrabold uppercase tracking-widest text-muted">Mobile Number</label>
+                        <div class="flex flex-col gap-3 sm:flex-row">
+                            <input id="riderPhoneInput" type="tel" placeholder="+91 90000 00000" class="w-full rounded-xl bg-white border border-slate-200 px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40" required />
+                            <button type="button" id="sendOtpBtn" class="px-5 py-3 bg-primary/10 text-primary rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary/20 transition-all">
+                                Send OTP
+                            </button>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[0.65rem] font-extrabold uppercase tracking-widest text-muted">OTP Code</label>
+                        <input id="otpInput" type="text" inputmode="numeric" placeholder="6-digit code" class="w-full rounded-xl bg-white border border-slate-200 px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40" required />
+                        <p id="otpStatus" class="text-[0.6rem] text-muted">Enter your mobile number to receive an OTP.</p>
+                    </div>
+                    <button type="submit" class="w-full py-3.5 bg-primary text-white rounded-full font-extrabold text-sm uppercase tracking-widest shadow-lg hover:brightness-110 transition-all">
+                        Verify & Continue
+                    </button>
+                    <div class="flex items-center justify-between text-[0.6rem] font-bold uppercase tracking-widest text-muted">
+                        <span>Need admin access?</span>
+                        <a href="portal.html" class="text-primary hover:underline">Back to portal</a>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const userForm = document.getElementById('userLoginForm');
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        const otpStatus = document.getElementById('otpStatus');
+
+        async function requestOtp() {
+            const phone = document.getElementById('riderPhoneInput').value.trim();
+            if (!phone) {
+                otpStatus.innerText = 'Enter your mobile number first.';
+                return;
+            }
+            sendOtpBtn.disabled = true;
+            sendOtpBtn.innerText = 'Sending...';
+            otpStatus.innerText = 'Sending OTP...';
+
+            try {
+                const res = await fetch('/api/auth/request-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: 'user', identifier: phone })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    otpStatus.innerText = data.detail || 'OTP request failed.';
+                } else if (data.otp_debug) {
+                    otpStatus.innerText = `OTP (demo): ${data.otp_debug}`;
+                } else {
+                    otpStatus.innerText = 'OTP sent. Check your phone.';
+                }
+            } catch (err) {
+                otpStatus.innerText = 'OTP request failed. Try again.';
+            } finally {
+                sendOtpBtn.disabled = false;
+                sendOtpBtn.innerText = 'Send OTP';
+            }
+        }
+
+        sendOtpBtn.addEventListener('click', requestOtp);
+
+        userForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const name = document.getElementById('riderNameInput').value.trim();
+            const riderId = document.getElementById('riderIdInput').value.trim();
+            const phone = document.getElementById('riderPhoneInput').value.trim();
+            const otp = document.getElementById('otpInput').value.trim();
+
+            if (!phone || !otp) {
+                otpStatus.innerText = 'Enter your mobile number and OTP.';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: 'user', identifier: phone, otp })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.verified) {
+                    otpStatus.innerText = data.detail || 'OTP verification failed.';
+                    return;
+                }
+
+                sessionStorage.setItem('portalRole', 'user');
+                sessionStorage.setItem('riderName', name);
+                sessionStorage.setItem('authToken', data.token || '');
+                if (riderId) {
+                    sessionStorage.setItem('driver_id', riderId);
+                }
+                sessionStorage.removeItem('adminEmail');
+
+                const params = new URLSearchParams(window.location.search);
+                const redirect = params.get('redirect') || 'worker_dashboard.html';
+                window.location.href = redirect;
+            } catch (err) {
+                otpStatus.innerText = 'OTP verification failed. Try again.';
+            }
+        });
+    </script>
+</body>
+</html>

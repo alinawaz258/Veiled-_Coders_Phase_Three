@@ -1,0 +1,1 @@
+"""SAFEPASS prototype package."""

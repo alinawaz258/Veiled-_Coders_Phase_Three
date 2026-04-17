@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>GigShield AI | Login Portal</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#0d9488",
+                        ink: "#0f172a",
+                        slate: "#64748b",
+                        mist: "#f8fafc",
+                        glow: "#e2f5f2",
+                    },
+                    borderRadius: {
+                        xl: "1.5rem",
+                        full: "9999px",
+                    },
+                    fontFamily: {
+                        sans: ["Space Grotesk", "sans-serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: radial-gradient(circle at 15% 20%, rgba(13, 148, 136, 0.2), transparent 45%),
+                        radial-gradient(circle at 85% 10%, rgba(99, 102, 241, 0.15), transparent 40%),
+                        #f6f7fb;
+            color: #0f172a;
+        }
+        .portal-card {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 30px 70px rgba(15, 23, 42, 0.08);
+        }
+        .glow-ring {
+            box-shadow: 0 0 0 8px rgba(13, 148, 136, 0.08);
+        }
+        .weather-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+            transition: opacity 0.6s ease;
+        }
+        .weather-overlay.is-clear { opacity: 1; }
+        .weather-overlay.is-rain { opacity: 0.95; }
+        .weather-overlay.is-storm { opacity: 1; }
+
+        .weather-gradient {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.18), transparent 45%),
+                        radial-gradient(circle at 85% 15%, rgba(13, 148, 136, 0.15), transparent 40%);
+            transition: opacity 0.6s ease;
+        }
+        .weather-overlay.is-clear .weather-gradient {
+            background: radial-gradient(circle at 20% 15%, rgba(253, 224, 71, 0.32), transparent 45%),
+                        radial-gradient(circle at 85% 10%, rgba(251, 191, 36, 0.28), transparent 42%);
+            filter: saturate(1.2);
+        }
+        .weather-overlay.is-rain .weather-gradient {
+            background: radial-gradient(circle at 20% 20%, rgba(14, 116, 144, 0.25), transparent 50%),
+                        radial-gradient(circle at 80% 10%, rgba(15, 23, 42, 0.2), transparent 45%);
+        }
+        .weather-overlay.is-storm .weather-gradient {
+            background: radial-gradient(circle at 20% 10%, rgba(15, 23, 42, 0.35), transparent 55%),
+                        radial-gradient(circle at 70% 15%, rgba(30, 64, 175, 0.25), transparent 45%);
+        }
+
+        .weather-haze {
+            position: absolute;
+            inset: -20%;
+            background: linear-gradient(120deg, rgba(253, 224, 71, 0.2), transparent 45%, rgba(56, 189, 248, 0.15));
+            opacity: 0;
+            filter: blur(20px);
+            animation: haze 14s ease-in-out infinite;
+        }
+        .weather-overlay.is-clear .weather-haze { opacity: 0.55; }
+
+        .weather-sparkles {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(255, 255, 255, 0.7) 1px, transparent 1px);
+            background-size: 140px 140px;
+            opacity: 0;
+            animation: sparkle 18s linear infinite;
+        }
+        .weather-overlay.is-clear .weather-sparkles { opacity: 0.35; }
+
+        .weather-sun {
+            position: absolute;
+            top: 6%;
+            right: 10%;
+            width: 240px;
+            height: 240px;
+            opacity: 0;
+            transform: scale(0.85);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .weather-overlay.is-clear .weather-sun {
+            opacity: 0.9;
+            transform: scale(1);
+        }
+        .sun-glow {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(253, 230, 138, 0.6), rgba(251, 191, 36, 0.3) 45%, transparent 70%);
+            animation: sunGlow 9s ease-in-out infinite;
+        }
+        .sun-rays {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg,
+                rgba(251, 191, 36, 0.0) 0deg,
+                rgba(251, 191, 36, 0.55) 12deg,
+                rgba(251, 191, 36, 0.0) 24deg,
+                rgba(251, 191, 36, 0.55) 36deg,
+                rgba(251, 191, 36, 0.0) 48deg);
+            mask: radial-gradient(circle, transparent 0 40%, #000 42% 100%);
+            opacity: 0.45;
+            animation: spin 26s linear infinite;
+        }
+        .sun-core {
+            position: absolute;
+            inset: 56px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #fff7cc 0%, #facc15 55%, rgba(250, 204, 21, 0.2) 70%, transparent 75%);
+            box-shadow: 0 0 40px rgba(251, 191, 36, 0.6);
+            animation: sunPulse 6s ease-in-out infinite;
+        }
+
+        .weather-rain {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+        .drop {
+            position: absolute;
+            top: -120px;
+            width: 2px;
+            height: 18px;
+            background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,0.65));
+            animation: fall linear infinite;
+        }
+        .weather-overlay.is-storm .drop {
+            background: linear-gradient(180deg, rgba(255,255,255,0), rgba(148,163,184,0.8));
+            width: 2.5px;
+            height: 22px;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-140px); opacity: 0; }
+            10% { opacity: 0.9; }
+            100% { transform: translateY(120vh); opacity: 0.1; }
+        }
+
+        .weather-lightning {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 60% 20%, rgba(255,255,255,0.75), transparent 40%);
+            opacity: 0;
+        }
+        .weather-overlay.is-storm .weather-lightning {
+            animation: flash 6s infinite;
+        }
+        @keyframes flash {
+            0%, 92%, 100% { opacity: 0; }
+            93% { opacity: 0.3; }
+            95% { opacity: 0.7; }
+            97% { opacity: 0.15; }
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes sunPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.04); }
+        }
+        @keyframes sunGlow {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        @keyframes haze {
+            0%, 100% { transform: translateX(-4%); }
+            50% { transform: translateX(4%); }
+        }
+        @keyframes sparkle {
+            from { background-position: 0 0; }
+            to { background-position: 140px 140px; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div id="weatherOverlay" class="weather-overlay is-clear" aria-hidden="true">
+        <div class="weather-gradient"></div>
+        <div class="weather-haze"></div>
+        <div class="weather-sparkles"></div>
+        <div class="weather-sun">
+            <div class="sun-glow"></div>
+            <div class="sun-rays"></div>
+            <div class="sun-core"></div>
+        </div>
+        <div class="weather-rain" id="rainLayer"></div>
+        <div class="weather-lightning"></div>
+    </div>
+    <main class="min-h-screen flex items-center justify-center px-6 py-16 relative z-10">
+        <div class="w-full max-w-5xl">
+            <a href="index.html" class="inline-flex items-center gap-2 text-[0.65rem] font-black uppercase tracking-widest text-slate hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-sm">arrow_back</span>
+                Back to landing
+            </a>
+            <div class="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 items-center mt-6">
+            <section class="space-y-6">
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-glow text-primary text-[0.65rem] font-extrabold uppercase tracking-[0.2em] rounded-full">
+                    Secure Login Portal
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight">Welcome to GigShield AI.</h1>
+                <p class="text-base text-slate max-w-md">
+                    Choose your portal to access personalized tools, claims, and operational dashboards.
+                </p>
+                <div class="flex items-center gap-3 text-sm text-slate">
+                    <span class="material-symbols-outlined text-primary">verified_user</span>
+                    Authentication required before accessing features.
+                </div>
+            </section>
+
+            <section class="portal-card rounded-2xl p-8 space-y-6">
+                <div class="space-y-4">
+                    <a id="userLoginLink" href="user_login.html" class="block group rounded-2xl border border-slate-200 p-5 hover:border-primary/40 transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center glow-ring">
+                                <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">person</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-extrabold uppercase tracking-widest text-primary">Rider Portal</p>
+                                <p class="text-xs text-slate">Claims, payouts, and rider insights.</p>
+                            </div>
+                        </div>
+                    </a>
+                    <a id="adminLoginLink" href="admin_login.html" class="block group rounded-2xl border border-slate-200 p-5 hover:border-indigo-400 transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center">
+                                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">admin_panel_settings</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-extrabold uppercase tracking-widest text-ink">Admin Portal</p>
+                                <p class="text-xs text-slate">Operations, risk monitoring, and reviews.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="text-[0.65rem] uppercase tracking-widest text-slate font-bold">
+                    Choose your role to continue.
+                </div>
+            </section>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const redirect = params.get('redirect');
+        const suffix = redirect ? `?redirect=${encodeURIComponent(redirect)}` : '';
+
+        const userLink = document.getElementById('userLoginLink');
+        const adminLink = document.getElementById('adminLoginLink');
+        userLink.href = `user_login.html${suffix}`;
+        adminLink.href = `admin_login.html${suffix}`;
+        sessionStorage.removeItem('portalRole');
+        sessionStorage.removeItem('authToken');
+        sessionStorage.removeItem('riderName');
+        sessionStorage.removeItem('driver_id');
+        sessionStorage.removeItem('adminEmail');
+
+        const weatherOverlay = document.getElementById('weatherOverlay');
+        const rainLayer = document.getElementById('rainLayer');
+
+        function setWeatherMode(mode) {
+            weatherOverlay.classList.remove('is-clear', 'is-rain', 'is-storm');
+            weatherOverlay.classList.add(`is-${mode}`);
+            seedRain(mode);
+        }
+
+        function seedRain(mode) {
+            rainLayer.innerHTML = '';
+            if (mode === 'clear') return;
+            const count = mode === 'storm' ? 120 : 70;
+            for (let i = 0; i < count; i += 1) {
+                const drop = document.createElement('span');
+                drop.className = 'drop';
+                drop.style.left = `${Math.random() * 100}%`;
+                drop.style.animationDuration = `${1.2 + Math.random() * 1.8}s`;
+                drop.style.animationDelay = `${Math.random() * 2}s`;
+                drop.style.opacity = `${0.25 + Math.random() * 0.6}`;
+                rainLayer.appendChild(drop);
+            }
+        }
+
+        function classifyWeather(precip, wind, code) {
+            const stormCodes = [95, 96, 99];
+            const rainCodes = [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82];
+            if (wind >= 50 || precip >= 15 || stormCodes.includes(code)) return 'storm';
+            if (precip >= 1 || rainCodes.includes(code)) return 'rain';
+            return 'clear';
+        }
+
+        async function fetchWeather(lat, lon) {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=precipitation,wind_speed_10m,weather_code&timezone=auto`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('weather fetch failed');
+            const data = await res.json();
+            const current = data.current || {};
+            const precip = Number(current.precipitation) || 0;
+            const wind = Number(current.wind_speed_10m) || 0;
+            const code = Number(current.weather_code) || 0;
+            return classifyWeather(precip, wind, code);
+        }
+
+        function initWeather() {
+            if (!navigator.geolocation) {
+                setWeatherMode('clear');
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                try {
+                    const mode = await fetchWeather(pos.coords.latitude, pos.coords.longitude);
+                    setWeatherMode(mode);
+                } catch (err) {
+                    setWeatherMode('clear');
+                }
+            }, () => {
+                setWeatherMode('clear');
+            }, { timeout: 5000 });
+        }
+
+        initWeather();
+    </script>
+</body>
+</html>

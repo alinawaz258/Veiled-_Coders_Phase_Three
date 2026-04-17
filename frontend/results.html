@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Risk Score Results | GigShield AI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#0d9488",
+                        "primary-container": "#008378",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#f4fffc",
+                        "surface": "#f9f9fb",
+                        "surface-bright": "#f9f9fb",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f3f3f5",
+                        "surface-container": "#eeeef0",
+                        "surface-container-high": "#e8e8ea",
+                        "surface-container-highest": "#e2e2e4",
+                        "on-surface": "#1a1c1d",
+                        "on-surface-variant": "#3d4947",
+                        "outline": "#6d7a77",
+                        "outline-variant": "#bcc9c6",
+                        "secondary": "#5f5e63",
+                        "tertiary": "#825100",
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3.5rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "sans": ["Inter", "sans-serif"],
+                        "headline": ["Inter"],
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f9f9fb;
+            color: #1a1c1d;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .headline-dense {
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+        }
+        .glass-nav {
+            background: rgba(249, 249, 251, 0.8);
+            backdrop-filter: blur(24px);
+        }
+        .metric-card {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px -4px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(13, 148, 136, 0.1);
+        }
+        .ledger-row:hover {
+            background-color: #f3f3f5;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-32" data-role="user">
+    <script src="auth_guard.js"></script>
+
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-nav px-8 py-5 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">shield</span>
+            </div>
+            <a href="worker_dashboard.html" class="text-xl font-extrabold tracking-tighter">GigShield AI</a>
+        </div>
+        
+        <div class="hidden md:flex items-center gap-10">
+            <a href="worker_dashboard.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Dashboard</a>
+            <a href="assessment.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Risk Assessment</a>
+            <a href="results.html" class="text-xs font-bold uppercase tracking-widest text-primary">Forensic Ledger</a>
+            <a href="claims.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Claims</a>
+            <a href="auditor.html" data-rbac="admin" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Auditor</a>
+            <a href="#" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Policy</a>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- Simulation Mode Toggle -->
+            <button onclick="toggleDemoMode()" id="demoToggleBtn" class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 transition-all group">
+                <span id="demoIndicator" class="w-2 h-2 rounded-full bg-secondary transition-all"></span>
+                <span id="demoLabel" class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary group-hover:text-amber-600 transition-colors">Simulation: Off</span>
+            </button>
+            <button onclick="logoutUser()" class="px-3 py-1.5 rounded-full border border-surface-container text-[0.6rem] font-black uppercase tracking-widest text-secondary hover:text-primary hover:border-primary/40 transition-all">
+                Logout
+            </button>
+            <button class="p-2 text-secondary hover:bg-surface-container transition-colors rounded-full">
+                <span class="material-symbols-outlined">notifications</span>
+            </button>
+            <div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden border-2 border-white shadow-sm">
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" alt="Avatar" class="w-full h-full object-cover">
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-32 px-8 max-w-7xl mx-auto space-y-12">
+        <header class="mb-16">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[0.6rem] font-black uppercase tracking-widest mb-4">
+               <span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span> Real-Time Audit Complete
+            </div>
+            <h1 class="text-5xl font-extrabold headline-dense">Verification Verdict.</h1>
+            <p id="cityDisplay" class="text-lg text-primary font-bold uppercase tracking-widest mt-2">-- Registry</p>
+            <p class="text-lg text-on-surface-variant max-w-2xl mt-4 leading-relaxed">
+                Comprehensive data audit of your operational risk profile based on live telemetry and predictive AI.
+            </p>
+        </header>
+
+        <!-- Top Highlights Grid -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Disruption Probability -->
+            <div class="metric-card space-y-6">
+                <div class="flex justify-between items-center">
+                    <span class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-secondary">Risk Index</span>
+                    <span class="material-symbols-outlined text-primary">analytics</span>
+                </div>
+                <div class="space-y-1">
+                    <div id="riskIndex" class="text-4xl font-extrabold tracking-tight">--</div>
+                    <div id="riskLevel" class="text-[0.65rem] font-bold uppercase tracking-widest text-secondary">Analyzing...</div>
+                </div>
+            </div>
+
+            <!-- Disruption Prob -->
+            <div class="metric-card space-y-6">
+                <div class="flex justify-between items-center">
+                    <span class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-secondary">Probability</span>
+                    <span class="material-symbols-outlined text-primary">radar</span>
+                </div>
+                <div class="space-y-1">
+                    <div id="disruptionProb" class="text-4xl font-extrabold tracking-tight">--%</div>
+                    <div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden mt-2">
+                        <div id="probBar" class="h-full bg-primary w-0 transition-all duration-1000"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Premium -->
+            <div class="metric-card space-y-6">
+                <div class="flex justify-between items-center">
+                    <span class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-secondary">Weekly Quote</span>
+                    <div class="px-2 py-1 bg-primary/5 rounded text-[0.5rem] font-bold text-primary uppercase">Optimized</div>
+                </div>
+                <div class="space-y-1">
+                    <div id="premium" class="text-4xl font-extrabold tracking-tight">₹--</div>
+                    <div class="text-[0.65rem] font-bold text-secondary uppercase tracking-widest">Post-Subsidy Rate</div>
+                </div>
+            </div>
+
+            <!-- Expected Loss -->
+            <div class="metric-card space-y-6">
+                <div class="flex justify-between items-center">
+                    <span class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-secondary">Est. Coverage</span>
+                    <span class="material-symbols-outlined text-primary">verified</span>
+                </div>
+                <div class="space-y-1">
+                    <div id="coverage" class="text-4xl font-extrabold tracking-tight">₹--</div>
+                    <div class="text-[0.65rem] font-bold text-secondary uppercase tracking-widest">Maximum Limit</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytical Deep Dive -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- AI Explainability -->
+            <div class="bg-surface-container-low p-10 rounded-xl space-y-10">
+                <div class="flex justify-between items-start">
+                    <div class="space-y-1">
+                        <h3 class="text-2xl font-extrabold tracking-tight">Explainability Engine</h3>
+                        <p class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-secondary">Model v2.0.0 • Feature Weights</p>
+                    </div>
+                    <span class="material-symbols-outlined text-secondary">info</span>
+                </div>
+
+                <div id="explainabilityList" class="space-y-6">
+                    <!-- Dynamic contributions will be injected here -->
+                </div>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const data = JSON.parse(sessionStorage.getItem('risk_results'));
+                        if (!data) {
+                            window.location.href = 'assessment.html';
+                            return;
+                        }
+
+                        // Top metrics
+                        document.getElementById('riskIndex').innerText = data.disruption_probability.toFixed(4);
+                        document.getElementById('disruptionProb').innerText = (data.disruption_probability * 100).toFixed(1) + '%';
+                        document.getElementById('probBar').style.width = (data.disruption_probability * 100) + '%';
+                        document.getElementById('cityDisplay').innerText = data.city.toUpperCase() + ' REGISTRY';
+                        
+                        const levelEl = document.getElementById('riskLevel');
+                        levelEl.innerText = data.risk_level.replace('_', ' ') + ' Profile';
+                        if (data.risk_level === 'CRITICAL') levelEl.className = 'text-[0.65rem] font-bold text-red-600 uppercase tracking-widest';
+                        else if (data.risk_level === 'HIGH' || data.risk_level === 'MEDIUM') levelEl.className = 'text-[0.65rem] font-bold text-amber-600 uppercase tracking-widest';
+                        else levelEl.className = 'text-[0.65rem] font-bold text-primary uppercase tracking-widest';
+
+                        document.getElementById('premium').innerText = '\u20b9' + data.premium_breakdown.total_premium_inr;
+                        document.getElementById('coverage').innerText = '\u20b9' + (data.policy_terms?.weekly_aggregate_cap_inr || Math.round(data.premium_breakdown.expected_loss_inr * 1.5)).toLocaleString();
+
+                        // Explainability Engine
+                        const list = document.getElementById('explainabilityList');
+                        const contributions = data.feature_contributions
+                            .filter(c => c.label !== 'Air quality (AQI)')
+                            .slice(0, 5);
+                        
+                        list.innerHTML = contributions.map(c => `
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-xs font-bold uppercase tracking-widest text-on-surface">
+                                    <span>${c.label}</span>
+                                    <span class="text-primary">${(c.contribution * 100).toFixed(1)}%</span>
+                                </div>
+                                <div class="w-full h-1.5 bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary" style="width: ${Math.min(c.contribution * 100, 100)}%"></div>
+                                </div>
+                            </div>
+                        `).join('');
+
+                        // Fraud Signals
+                        const fraudBadge = document.getElementById('fraudBadge');
+                        if (data.fraud) {
+                            fraudBadge.innerText = data.fraud.flag || data.fraud_flag || 'CLEAN';
+                            if (data.fraud.flag === 'CLEAN') {
+                                fraudBadge.className = 'bg-primary/10 text-primary border border-primary/20 px-4 py-1 rounded-full text-[0.65rem] font-black tracking-widest';
+                            } else {
+                                fraudBadge.className = 'bg-amber-100 text-amber-700 border border-amber-500/20 px-4 py-1 rounded-full text-[0.65rem] font-black tracking-widest';
+                            }
+                            const sigContainer = document.getElementById('fraudSignals');
+                            const signals = data.fraud.signals || {};
+                            sigContainer.innerHTML = Object.entries(signals).map(([key, val]) => {
+                                const isClean = val < 0.35;
+                                return `<div class="flex justify-between items-center px-6 py-4 bg-surface-container-lowest rounded-lg border border-surface-container-high">
+                                    <span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">${key.replace(/_/g, ' ')}</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[0.55rem] font-black ${isClean ? 'text-primary' : 'text-amber-600'} uppercase tracking-widest">${(val * 100).toFixed(0)}%</span>
+                                        <span class="material-symbols-outlined ${isClean ? 'text-primary' : 'text-amber-500'} text-sm" style="font-variation-settings: 'FILL' 1;">${isClean ? 'check_circle' : 'warning'}</span>
+                                    </div>
+                                </div>`;
+                            }).join('');
+                        }
+
+                        // Premium Breakdown
+                        const pb = data.premium_breakdown;
+                        if (pb) {
+                            const breakdownEl = document.getElementById('premiumBreakdown');
+                            const items = [
+                                { label: 'Base Expected Loss', value: pb.expected_loss_inr, icon: 'analytics' },
+                                { label: 'Risk Loading (30%)', value: pb.risk_loading_inr, icon: 'trending_up' },
+                                { label: 'Seasonal Loading', value: pb.seasonal_loading_inr, icon: 'thunderstorm' },
+                                { label: 'Zone Surcharge', value: pb.zone_loading_inr || 0, icon: 'location_on' },
+                                { label: 'Platform Fee', value: pb.platform_fee_inr, icon: 'receipt' },
+                            ];
+                            breakdownEl.innerHTML = items.map(item => `
+                                <div class="flex justify-between items-center px-4 py-3 rounded-lg hover:bg-surface-container-low transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-primary text-sm">${item.icon}</span>
+                                        <span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">${item.label}</span>
+                                    </div>
+                                    <span class="text-sm font-extrabold">\u20b9${item.value.toFixed(2)}</span>
+                                </div>
+                            `).join('') + `
+                                <div class="flex justify-between items-center px-4 py-4 rounded-xl bg-primary/5 border-2 border-primary/20 mt-2">
+                                    <span class="text-sm font-black uppercase tracking-widest text-primary">Weekly Premium</span>
+                                    <span class="text-2xl font-extrabold text-primary">\u20b9${pb.total_premium_inr}</span>
+                                </div>`;
+                        }
+
+                        // Zone Pricing
+                        const zp = data.zone_pricing;
+                        if (zp && zp.adjustment_inr) {
+                            document.getElementById('zonePricing').classList.remove('hidden');
+                            document.getElementById('zoneRationale').innerText = zp.rationale || '+\u20b9' + zp.adjustment_inr + ' zone surcharge';
+                        }
+                    });
+                </script>
+            </div>
+
+            <!-- Fraud & Anomaly Audit -->
+            <div class="bg-surface-container-low p-10 rounded-xl space-y-10 border-t-8 border-primary">
+                <div class="flex justify-between items-start">
+                    <div class="space-y-1">
+                        <h3 class="text-2xl font-extrabold tracking-tight">Anomaly Audit</h3>
+                        <p class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-secondary">6-Signal Consensus Engine</p>
+                    </div>
+                    <div id="fraudBadge" class="bg-primary/10 text-primary border border-primary/20 px-4 py-1 rounded-full text-[0.65rem] font-black tracking-widest">CLEAN</div>
+                </div>
+
+                <div id="fraudSignals" class="grid grid-cols-1 gap-4">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Premium Breakdown - Explainability -->
+        <section class="bg-white p-10 rounded-xl border border-surface-container space-y-8">
+            <div class="flex justify-between items-start">
+                <div class="space-y-1">
+                    <h3 class="text-2xl font-extrabold tracking-tight">Premium Breakdown</h3>
+                    <p class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-secondary">Transparent Pricing Decomposition</p>
+                </div>
+                <span class="material-symbols-outlined text-primary">receipt_long</span>
+            </div>
+
+            <div id="premiumBreakdown" class="space-y-4">
+                <!-- Populated by JS -->
+            </div>
+
+            <div id="zonePricing" class="hidden p-4 rounded-xl bg-primary/5 border border-primary/10">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="material-symbols-outlined text-primary text-sm">location_on</span>
+                    <span class="text-[0.6rem] font-black uppercase tracking-widest text-primary">Hyper-Local Zone Adjustment</span>
+                </div>
+                <p id="zoneRationale" class="text-xs text-on-surface-variant"></p>
+            </div>
+        </section>
+
+        <!-- Final Action Ledger -->
+        <section class="bg-surface-container-lowest p-12 rounded-xl border border-surface-container space-y-12 shadow-sm">
+            <div class="flex flex-col md:flex-row justify-between items-end border-b border-surface-container pb-8 gap-8">
+                <div class="space-y-2">
+                    <h2 class="text-3xl font-extrabold tracking-tight">Policy Finalization.</h2>
+                    <p class="text-sm text-secondary font-medium">Doc ID: GS-AI-99-AUDIT • Underwritten by GigShield AI</p>
+                </div>
+                <div class="flex gap-4">
+                    <button class="bg-surface-container-low text-on-surface px-8 py-4 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-surface-container transition-all">
+                        <span class="material-symbols-outlined text-primary">download</span>
+                        Export ISO Audit
+                    </button>
+                    <button onclick="window.location.href='activate.html'" class="bg-primary text-white px-10 py-4 rounded-full font-extrabold text-sm flex items-center gap-3 hover:bg-primary-container transition-all active:scale-95 shadow-xl shadow-primary/20">
+                        Activate Protection
+                        <span class="material-symbols-outlined">bolt</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+                <div class="space-y-2">
+                    <h4 class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-secondary">Regulatory Scope</h4>
+                    <p class="text-sm font-semibold">IRDAI Sandbox Compliant Framework v2.1</p>
+                </div>
+                <div class="space-y-2">
+                    <h4 class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-secondary">Settlement Grid</h4>
+                    <p class="text-sm font-semibold">Instant UPI Settlement • Zero Moratorium</p>
+                </div>
+                <div class="space-y-2">
+                    <h4 class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-secondary">Effective Date</h4>
+                    <p class="text-sm font-semibold">Immediate Activation upon T+0 Payment</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Floating Navigation -->
+    <nav class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 glass-nav px-8 py-4 rounded-full border border-surface-container shadow-2xl flex items-center gap-12">
+        <a href="worker_dashboard.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">hub</span>
+        </a>
+        <a href="assessment.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">policy</span>
+        </a>
+        <a href="results.html" class="flex flex-col items-center justify-center text-primary transition-all">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+        </a>
+        <a href="claims.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">history_edu</span>
+        </a>
+        <a href="payout.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">payments</span>
+        </a>
+        <a href="auditor.html" data-rbac="admin" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">monitoring</span>
+        </a>
+        <div class="w-px h-6 bg-surface-container"></div>
+        <a href="portal.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">logout</span>
+        </a>
+    </nav>
+
+    <!-- Footer -->
+    <footer class="bg-surface-container-highest/20 mt-24 py-16 px-8 border-t border-surface-container">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
+            <div class="space-y-4">
+                <div class="text-2xl font-extrabold tracking-tighter">GigShield AI</div>
+                <p class="text-sm text-on-surface-variant max-w-xs">
+                    Redefining financial security for the modern workforce through data and AI.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-12 text-center md:text-left">
+                <div class="space-y-4">
+                    <h4 class="text-[0.65rem] font-bold uppercase tracking-widest text-secondary">Product</h4>
+                    <ul class="space-y-2 text-sm font-medium">
+                        <li><a href="#" class="hover:text-primary transition-colors">Risk Score</a></li>
+                        <li><a href="#" class="hover:text-primary transition-colors">Forensic Audit</a></li>
+                    </ul>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="text-[0.65rem] font-bold uppercase tracking-widest text-secondary">Compliance</h4>
+                    <ul class="space-y-2 text-sm font-medium">
+                        <li><a href="#" class="hover:text-primary transition-colors">ISO 27001</a></li>
+                        <li><a href="#" class="hover:text-primary transition-colors">GDPR</a></li>
+                    </ul>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="text-[0.65rem] font-bold uppercase tracking-widest text-secondary">Support</h4>
+                    <ul class="space-y-2 text-sm font-medium">
+                        <li><a href="#" class="hover:text-primary transition-colors">Redressal</a></li>
+                        <li><a href="#" class="hover:text-primary transition-colors">Help</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto mt-16 pt-8 border-t border-surface-container text-[0.65rem] font-bold uppercase tracking-[0.2em] text-secondary text-center">
+            © 2026 GigShield AI. Architectural Ledger Design System v1.0
+        </div>
+    </footer>
+
+    <script>
+        // Simulation Mode Sync & Toggle Logic
+        async function fetchDemoStatus() {
+            try {
+                const res = await fetch('/api/demo/status');
+                const data = await res.json();
+                updateDemoUI(data.demo_mode);
+            } catch (e) {}
+        }
+
+        async function toggleDemoMode() {
+            try {
+                const res = await fetch('/api/demo/toggle', { method: 'POST' });
+                const data = await res.json();
+                updateDemoUI(data.demo_mode);
+                alert(data.message);
+            } catch (e) {
+                alert("Simulation mode toggle failed.");
+            }
+        }
+
+        function updateDemoUI(isActive) {
+            const indicator = document.getElementById('demoIndicator');
+            const label = document.getElementById('demoLabel');
+            const btn = document.getElementById('demoToggleBtn');
+            if (!indicator || !label || !btn) return;
+
+            if (isActive) {
+                indicator.classList.remove('bg-secondary');
+                indicator.classList.add('bg-amber-500', 'animate-pulse');
+                label.innerText = 'Simulation: On';
+                label.classList.remove('text-secondary');
+                label.classList.add('text-amber-600');
+                btn.classList.add('border-amber-500/40', 'bg-amber-500/10');
+            } else {
+                indicator.classList.add('bg-secondary');
+                indicator.classList.remove('bg-amber-500', 'animate-pulse');
+                label.innerText = 'Simulation: Off';
+                label.classList.add('text-secondary');
+                label.classList.remove('text-amber-600');
+                btn.classList.remove('border-amber-500/40', 'bg-amber-500/10');
+            }
+        }
+
+        fetchDemoStatus();
+    </script>
+</body>
+</html>

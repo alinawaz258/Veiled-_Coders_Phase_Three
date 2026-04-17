@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Claims | GigShield AI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#0d9488",
+                        "primary-container": "#008378",
+                        "on-primary": "#ffffff",
+                        "surface": "#f9f9fb",
+                        "on-surface": "#1a1c1d",
+                        "on-surface-variant": "#3d4947",
+                        "secondary": "#5f5e63",
+                    },
+                    "borderRadius": { "DEFAULT": "1rem", "lg": "2rem", "xl": "3.5rem" },
+                    "fontFamily": { "sans": ["Inter", "sans-serif"] }
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9f9fb; color: #1a1c1d; -webkit-font-smoothing: antialiased; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-nav { background: rgba(249, 249, 251, 0.8); backdrop-filter: blur(24px); }
+        .claim-card { background: #ffffff; border: 1px solid #eeeef0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .minimal-input { background-color: #f3f3f5; border: none; padding: 1rem 1.25rem; border-radius: 0.75rem; transition: all 0.2s ease; }
+        .minimal-input:focus { background-color: #ffffff; box-shadow: 0 0 0 2px #0d9488; outline: none; }
+        @keyframes scan { 0% { top: 0%; } 100% { top: 100%; } }
+        .scanner::after { content: ""; position: absolute; left: 0; right: 0; height: 2px; background: #0d9488; box-shadow: 0 0 15px #0d9488; animation: scan 2s linear infinite; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fadeInUp { animation: fadeInUp 0.5s ease-out; }
+        @keyframes checkmark { 0% { stroke-dashoffset: 100; } 100% { stroke-dashoffset: 0; } }
+        .success-check { animation: checkmark 0.6s ease-out 0.3s forwards; stroke-dasharray: 100; stroke-dashoffset: 100; }
+        .modal-backdrop { background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); }
+    </style>
+</head>
+<body class="min-h-screen pb-32" data-role="user">
+    <script src="auth_guard.js"></script>
+
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-nav px-8 py-5 flex justify-between items-center border-b border-surface-container">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+            </div>
+            <a href="worker_dashboard.html" class="text-xl font-extrabold tracking-tighter">GigShield AI</a>
+        </div>
+        <div class="hidden md:flex items-center gap-10">
+            <a href="worker_dashboard.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Dashboard</a>
+            <a href="assessment.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Risk Assessment</a>
+            <a href="results.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Forensic Ledger</a>
+            <a href="#" class="text-xs font-bold uppercase tracking-widest text-primary">Claims</a>
+        </div>
+        <div class="flex items-center gap-4">
+            <button onclick="toggleDemoMode()" id="demoToggleBtn" class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 transition-all group">
+                <span id="demoIndicator" class="w-2 h-2 rounded-full bg-secondary"></span>
+                <span id="demoLabel" class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary group-hover:text-amber-600 transition-colors">Simulation: Off</span>
+            </button>
+            <button onclick="logoutUser()" class="px-3 py-1.5 rounded-full border border-surface-container text-[0.6rem] font-black uppercase tracking-widest text-secondary hover:text-primary hover:border-primary/40 transition-all">
+                Logout
+            </button>
+            <div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden border-2 border-white shadow-sm">
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" alt="Avatar" class="w-full h-full object-cover">
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-32 px-8 max-w-7xl mx-auto space-y-12">
+        <header class="mb-16">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[0.6rem] font-black uppercase tracking-widest mb-4">
+               <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> Parametric Claim Engine
+            </div>
+            <h1 class="text-5xl font-extrabold tracking-tighter">File a Claim.</h1>
+            <p class="text-lg text-on-surface-variant max-w-2xl mt-4 leading-relaxed">
+                Report disruption for instant AI-powered verification and automated payout.
+            </p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            
+            <!-- Claim Form -->
+            <div class="lg:col-span-7">
+                <form id="claimForm" class="claim-card p-10 rounded-xl space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">City</label>
+                            <input type="text" id="city" name="city" readonly class="minimal-input w-full opacity-60">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Platform</label>
+                            <input type="text" id="platform" name="platform" readonly class="minimal-input w-full opacity-60">
+                        </div>
+                    </div>
+
+                    <div id="demoOverrides" class="hidden p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-4 mb-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="material-symbols-outlined text-amber-600 text-sm">settings_input_component</span>
+                            <span class="text-[0.6rem] font-black uppercase tracking-[0.2em] text-amber-700">Simulation Overrides</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-[0.55rem] font-bold uppercase text-amber-700/70">Mock Payout (₹)</label>
+                                <input type="number" id="demo_payout" placeholder="e.g. 1200" class="minimal-input w-full bg-white/50 text-xs text-amber-900 border-amber-500/20">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[0.55rem] font-bold uppercase text-amber-700/70">Mock Reason</label>
+                                <input type="text" id="demo_reason" placeholder="e.g. Force Approved" class="minimal-input w-full bg-white/50 text-xs text-amber-900 border-amber-500/20">
+                            </div>
+                        </div>
+                        <div class="pt-2 border-t border-amber-500/10 flex justify-between items-center">
+                            <span class="text-[0.55rem] text-amber-700/50 font-bold uppercase italic">*Overrides active in Simulation Mode</span>
+                            <button type="button" onclick="resetDemoLedger()" class="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 text-[0.55rem] font-black uppercase rounded transition-all">
+                                <span class="material-symbols-outlined text-[0.7rem] align-middle mr-1">history_toggle_off</span>
+                                Reset Ledger
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <label class="text-[0.65rem] font-bold uppercase tracking-widest text-secondary ml-4">Disruption Reason</label>
+                        <select id="reason" required class="w-full bg-surface-container border-none rounded-2xl py-5 px-6 text-primary font-bold focus:ring-2 focus:ring-primary/20 appearance-none">
+                            <option value="Extreme Rain Alert">Extreme Rain Alert (>5mm/hr)</option>
+                            <option value="Severe Traffic Gridlock">Severe Traffic Gridlock (>85%)</option>
+                            <option value="Social Disruption / Active Event">Social Disruption / Active Event</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="text-[0.65rem] font-bold uppercase tracking-widest text-secondary ml-4">Explain the Reason (Any Language)</label>
+                        <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+                            <div class="space-y-2">
+                                <select id="noteLanguage" class="minimal-input w-full text-xs font-bold uppercase tracking-widest">
+                                    <option value="auto">Auto Detect</option>
+                                    <option value="en">English</option>
+                                    <option value="hi">Hindi</option>
+                                    <option value="bn">Bengali</option>
+                                    <option value="ta">Tamil</option>
+                                    <option value="te">Telugu</option>
+                                    <option value="kn">Kannada</option>
+                                    <option value="ml">Malayalam</option>
+                                    <option value="mr">Marathi</option>
+                                    <option value="gu">Gujarati</option>
+                                    <option value="pa">Punjabi</option>
+                                    <option value="ur">Urdu</option>
+                                </select>
+                                <textarea id="evidence" name="evidence" placeholder="Type or speak your explanation in any language..." class="minimal-input w-full h-28 resize-none"></textarea>
+                            </div>
+                            <div class="flex flex-col gap-3">
+                                <button type="button" id="speechBtn" onclick="toggleSpeechCapture()" class="w-full px-4 py-3 bg-primary text-white text-xs font-black uppercase tracking-widest rounded-full shadow hover:brightness-110 transition-all flex items-center justify-center gap-2">
+                                    <span class="material-symbols-outlined text-sm">mic</span>
+                                    Start Speech
+                                </button>
+                                <div id="speechStatus" class="text-[0.55rem] font-bold uppercase tracking-widest text-secondary text-center">Mic idle</div>
+                            </div>
+                        </div>
+                        <p class="text-[0.6rem] text-secondary">Speech is transcribed in the selected language and auto-translated to English on submission.</p>
+                    </div>
+
+                    <!-- Photo & Video Evidence with LIVE capture -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2 border border-surface-container p-4 rounded-xl bg-white hover:border-primary/30 transition-all relative" id="photoCard">
+                            <label class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary flex items-center gap-1 mb-2 cursor-pointer">
+                                <span class="material-symbols-outlined text-sm text-primary">add_a_photo</span> Photo Evidence
+                            </label>
+                            <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handleFileUpload(this, 'photo')">
+                            <button type="button" onclick="openCamera('photo')" id="photoStatus" class="w-full text-xs font-bold bg-primary/10 text-primary py-2 px-4 rounded-full flex items-center justify-center gap-2 transition-all cursor-pointer hover:bg-primary/20">
+                                <span class="material-symbols-outlined text-sm">camera</span> Capture Live Photo
+                            </button>
+                            <button type="button" onclick="document.getElementById('photoInput').click()" class="w-full text-[0.6rem] font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">
+                                Upload from device instead
+                            </button>
+                        </div>
+                        <div class="space-y-2 border border-surface-container p-4 rounded-xl bg-white hover:border-primary/30 transition-all relative" id="videoCard">
+                            <label class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary flex items-center gap-1 mb-2 cursor-pointer">
+                                <span class="material-symbols-outlined text-sm text-primary">videocam</span> Video Evidence
+                            </label>
+                            <input type="file" id="videoInput" accept="video/*" class="hidden" onchange="handleFileUpload(this, 'video')">
+                            <button type="button" onclick="openCamera('video')" id="videoStatus" class="w-full text-xs font-bold bg-primary/10 text-primary py-2 px-4 rounded-full flex items-center justify-center gap-2 transition-all cursor-pointer hover:bg-primary/20">
+                                <span class="material-symbols-outlined text-sm">videocam</span> Capture Live Video
+                            </button>
+                            <button type="button" onclick="document.getElementById('videoInput').click()" class="w-full text-[0.6rem] font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">
+                                Upload from device instead
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Additional Context (Optional)</label>
+                        <textarea id="additionalContext" name="additionalContext" placeholder="Add extra details (optional)..." class="minimal-input w-full h-24 resize-none"></textarea>
+                    </div>
+
+                    <div class="bg-surface-container-low p-6 rounded-xl space-y-4 border border-surface-container">
+                        <div class="flex justify-between items-center text-[0.6rem] font-bold uppercase tracking-widest text-secondary">
+                            <span>Live GPS Telemetry</span>
+                            <span class="text-primary flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">gps_fixed</span>
+                                AUTO-TETHERED
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-[0.65rem] font-medium text-on-surface-variant">
+                                LAT: <span id="lat" class="font-black text-on-surface">--</span>
+                            </div>
+                            <div class="text-[0.65rem] font-medium text-on-surface-variant">
+                                LNG: <span id="lng" class="font-black text-on-surface">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn" disabled class="w-full py-6 bg-surface-container-highest text-secondary rounded-full font-extrabold text-xl shadow-xl hover:bg-primary-container hover:text-white transition-all active:scale-95 flex items-center justify-center gap-3 cursor-not-allowed">
+                        <span id="btnText">Awaiting Location...</span>
+                        <span id="btnIcon" class="material-symbols-outlined">location_searching</span>
+                        <div id="loader" class="hidden animate-spin h-6 w-6 border-4 border-white border-t-transparent rounded-full"></div>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Side: Verdict + Ledger -->
+            <div class="lg:col-span-5 space-y-8">
+                <!-- Verdict Card -->
+                <div id="verdictCard" class="hidden claim-card p-10 rounded-xl bg-primary/5 border-primary/20 space-y-8 overflow-hidden relative animate-fadeInUp">
+                    <div class="scanner absolute inset-0 opacity-10 pointer-events-none"></div>
+                    <div class="flex justify-between items-start">
+                        <h3 class="text-2xl font-extrabold tracking-tighter">Claim Verdict</h3>
+                        <div id="verdictStatus" class="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[0.6rem] font-black uppercase tracking-widest">APPROVED</div>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="space-y-1">
+                            <span class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Payout Amount</span>
+                            <div id="payoutAmount" class="text-4xl font-extrabold tracking-tight">₹0</div>
+                        </div>
+                        <div class="space-y-1">
+                            <span class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Verification Result</span>
+                            <p id="verdictText" class="text-sm font-medium text-on-surface-variant leading-relaxed"></p>
+                        </div>
+                        <div class="pt-4 border-t border-primary/10 flex justify-between items-center">
+                            <span class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Claim ID: <span id="verdictClaimId" class="text-primary">--</span></span>
+                            <button id="withdrawBtn" onclick="openUPIModal()" class="hidden px-5 py-2.5 bg-primary text-white text-[0.65rem] font-black uppercase tracking-widest rounded-lg shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">account_balance_wallet</span>
+                                Transfer via UPI
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Claims Ledger -->
+                <div class="claim-card p-8 rounded-xl space-y-6">
+                    <h3 class="text-lg font-extrabold tracking-tight">Recent Activity</h3>
+                    <div id="ledgerContainer" class="space-y-4">
+                        <div class="text-center py-8 text-xs font-bold text-secondary uppercase tracking-widest opacity-40">No recent claims</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- UPI Modal -->
+    <div id="upiModal" class="hidden fixed inset-0 z-[100] modal-backdrop flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 space-y-6 animate-fadeInUp">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-extrabold tracking-tighter">Enter UPI ID</h3>
+                <button onclick="closeUPIModal()" class="text-secondary hover:text-on-surface transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <p class="text-sm text-on-surface-variant">Enter your UPI ID to receive the payout instantly to your bank account.</p>
+            <div class="space-y-2">
+                <label class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">UPI ID</label>
+                <input type="text" id="upiInput" placeholder="yourname@upi" class="minimal-input w-full font-mono text-lg tracking-wide">
+            </div>
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/10">
+                <span class="material-symbols-outlined text-primary">verified_user</span>
+                <div>
+                    <p class="text-xs font-bold text-on-surface">Payout: <span id="upiPayoutPreview" class="text-primary">₹0</span></p>
+                    <p class="text-[0.55rem] text-secondary">Claim: <span id="upiClaimPreview">--</span></p>
+                </div>
+            </div>
+            <button id="upiConfirmBtn" onclick="processUPITransfer()" class="w-full py-4 bg-primary text-white rounded-full font-extrabold text-lg shadow-xl hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3">
+                <span class="material-symbols-outlined">send</span>
+                Confirm & Transfer
+            </button>
+        </div>
+    </div>
+
+    <!-- Payment Success Screen -->
+    <div id="successScreen" class="hidden fixed inset-0 z-[200] bg-white flex items-center justify-center p-4">
+        <div class="text-center space-y-8 max-w-md animate-fadeInUp">
+            <!-- Success Animation -->
+            <div class="mx-auto w-28 h-28 bg-emerald-50 rounded-full flex items-center justify-center">
+                <svg viewBox="0 0 52 52" class="w-16 h-16">
+                    <circle cx="26" cy="26" r="25" fill="none" stroke="#10b981" stroke-width="2" opacity="0.3"/>
+                    <path class="success-check" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M14 27l7 7 16-16"/>
+                </svg>
+            </div>
+            
+            <div class="space-y-2">
+                <h2 class="text-3xl font-extrabold tracking-tighter text-emerald-600">Payment Successful!</h2>
+                <p class="text-on-surface-variant">Your payout has been transferred via UPI.</p>
+            </div>
+
+            <div class="bg-surface rounded-2xl p-6 space-y-4 text-left border border-surface-container">
+                <div class="flex justify-between items-center pb-4 border-b border-surface-container">
+                    <span class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Amount</span>
+                    <span id="successAmount" class="text-2xl font-extrabold text-emerald-600">₹0</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Status</span>
+                    <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-black uppercase">Completed</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Transaction ID</span>
+                    <span id="successTxnId" class="font-mono text-xs font-bold text-primary">--</span>
+                </div>
+                <div id="utrRow" class="hidden p-3 bg-primary/5 rounded-xl border border-primary/10">
+                    <span class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary block mb-1">UTR Number</span>
+                    <span id="successUTR" class="font-mono text-lg font-extrabold text-primary tracking-wider">--</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Gateway</span>
+                    <span id="successGateway" class="text-xs font-bold text-on-surface-variant uppercase">--</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Timestamp</span>
+                    <span id="successTimestamp" class="text-xs font-bold text-on-surface-variant">--</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Paid to</span>
+                    <span id="successUPI" class="font-mono text-xs font-bold text-on-surface">--</span>
+                </div>
+            </div>
+
+            <button onclick="closeSuccessScreen()" class="w-full py-4 bg-primary text-white rounded-full font-extrabold text-lg shadow-xl hover:brightness-110 active:scale-95 transition-all">
+                Done
+            </button>
+        </div>
+    </div>
+
+    <!-- Live Camera Modal -->
+    <div id="cameraModal" class="hidden fixed inset-0 z-[150] modal-backdrop flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 space-y-4 animate-fadeInUp">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 id="cameraTitle" class="text-xl font-extrabold tracking-tighter">Live Capture</h3>
+                    <p class="text-xs text-on-surface-variant">Allow camera access to capture real-time evidence.</p>
+                </div>
+                <button onclick="closeCamera()" class="text-secondary hover:text-on-surface transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="relative rounded-2xl overflow-hidden bg-black">
+                <video id="cameraPreview" class="w-full h-[360px] object-cover" playsinline autoplay muted></video>
+                <div id="recordingBadge" class="hidden absolute top-4 left-4 px-3 py-1 bg-red-600 text-white text-[0.55rem] font-black uppercase tracking-widest rounded-full flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span> Recording
+                </div>
+            </div>
+            <canvas id="photoCanvas" class="hidden"></canvas>
+            <div class="flex flex-wrap gap-3 justify-between items-center">
+                <div class="flex gap-3">
+                    <button id="capturePhotoBtn" type="button" onclick="capturePhoto()" class="px-5 py-2.5 bg-primary text-white text-xs font-black uppercase tracking-widest rounded-full shadow hover:brightness-110 transition-all">
+                        Capture Photo
+                    </button>
+                    <button id="startVideoBtn" type="button" onclick="startVideoRecording()" class="hidden px-5 py-2.5 bg-primary text-white text-xs font-black uppercase tracking-widest rounded-full shadow hover:brightness-110 transition-all">
+                        Start Recording
+                    </button>
+                    <button id="stopVideoBtn" type="button" onclick="stopVideoRecording()" class="hidden px-5 py-2.5 bg-red-600 text-white text-xs font-black uppercase tracking-widest rounded-full shadow hover:brightness-110 transition-all">
+                        Stop Recording
+                    </button>
+                </div>
+                <button type="button" onclick="closeCamera()" class="px-5 py-2.5 bg-surface-container text-secondary text-xs font-black uppercase tracking-widest rounded-full hover:bg-surface-container-high transition-all">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Floating Navigation -->
+    <nav class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 glass-nav px-8 py-4 rounded-full border border-surface-container shadow-2xl flex items-center gap-12">
+        <a href="worker_dashboard.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">hub</span>
+        </a>
+        <a href="assessment.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">policy</span>
+        </a>
+        <a href="results.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">receipt_long</span>
+        </a>
+        <a href="payout.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">payments</span>
+        </a>
+        <a href="auditor.html" data-rbac="admin" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">monitoring</span>
+        </a>
+        <div class="w-px h-6 bg-surface-container"></div>
+        <a href="claims.html" class="flex flex-col items-center justify-center text-primary transition-all">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+        </a>
+    </nav>
+
+    <script>
+        // ── State ──
+        let currentClaimId = null;
+        let currentPayoutAmount = 0;
+        let uploadedFiles = { photo: null, video: null };
+        const cameraState = { stream: null, recorder: null, chunks: [], mode: 'photo' };
+        let speechRecognition = null;
+        let speechActive = false;
+
+        // ── File Upload Handler ──
+        async function handleFileUpload(input, type) {
+            const file = input.files[0];
+            if (!file) return;
+            uploadedFiles[type] = file;
+            updateEvidenceStatus(type, file.name);
+        }
+
+        function updateEvidenceStatus(type, filename) {
+            const statusEl = document.getElementById(type + 'Status');
+            const cardEl = document.getElementById(type + 'Card');
+            const shortName = filename.length > 24 ? filename.substring(0, 24) + '...' : filename;
+            statusEl.innerHTML = `<span class="material-symbols-outlined text-sm">verified</span> ${shortName}`;
+            statusEl.className = "w-full text-xs font-bold bg-green-500/10 text-green-600 py-2 px-4 rounded-full flex items-center justify-center gap-2";
+            cardEl.classList.add('border-green-500/30');
+        }
+
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                const btn = document.getElementById('speechBtn');
+                const status = document.getElementById('speechStatus');
+                if (btn) btn.disabled = true;
+                if (btn) btn.classList.add('opacity-50', 'cursor-not-allowed');
+                if (status) status.innerText = 'Speech not supported';
+                return;
+            }
+
+            speechRecognition = new SpeechRecognition();
+            speechRecognition.interimResults = true;
+            speechRecognition.continuous = true;
+
+            speechRecognition.onresult = (event) => {
+                const note = document.getElementById('evidence');
+                let finalText = '';
+                let interimText = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalText += transcript;
+                    } else {
+                        interimText += transcript;
+                    }
+                }
+
+                const baseText = note.value.replace(/\s*\[listening\]$/i, '').trim();
+                const merged = [baseText, finalText.trim(), interimText.trim()].filter(Boolean).join(' ');
+                note.value = merged + (speechActive && interimText ? ' [listening]' : '');
+            };
+
+            speechRecognition.onend = () => {
+                if (!speechActive) return;
+                const status = document.getElementById('speechStatus');
+                if (status) status.innerText = 'Mic idle';
+                speechActive = false;
+                updateSpeechButton();
+            };
+
+            speechRecognition.onerror = () => {
+                const status = document.getElementById('speechStatus');
+                if (status) status.innerText = 'Speech error';
+                speechActive = false;
+                updateSpeechButton();
+            };
+        }
+
+        function updateSpeechButton() {
+            const btn = document.getElementById('speechBtn');
+            if (!btn) return;
+            if (speechActive) {
+                btn.innerHTML = '<span class="material-symbols-outlined text-sm">stop_circle</span> Stop Speech';
+                btn.classList.remove('bg-primary');
+                btn.classList.add('bg-red-600');
+            } else {
+                btn.innerHTML = '<span class="material-symbols-outlined text-sm">mic</span> Start Speech';
+                btn.classList.add('bg-primary');
+                btn.classList.remove('bg-red-600');
+            }
+        }
+
+        function toggleSpeechCapture() {
+            if (!speechRecognition) {
+                initSpeechRecognition();
+            }
+            if (!speechRecognition) return;
+
+            if (speechActive) {
+                speechRecognition.stop();
+                speechActive = false;
+                updateSpeechButton();
+                const status = document.getElementById('speechStatus');
+                if (status) status.innerText = 'Mic idle';
+                const note = document.getElementById('evidence');
+                note.value = note.value.replace(/\s*\[listening\]$/i, '').trim();
+                return;
+            }
+
+            const lang = document.getElementById('noteLanguage')?.value || 'auto';
+            speechRecognition.lang = lang === 'auto' ? (navigator.language || 'en') : lang;
+            speechActive = true;
+            updateSpeechButton();
+            const status = document.getElementById('speechStatus');
+            if (status) status.innerText = 'Listening...';
+            speechRecognition.start();
+        }
+
+        function pickVideoMimeType() {
+            if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return "";
+            const types = [
+                "video/webm;codecs=vp9",
+                "video/webm;codecs=vp8",
+                "video/webm",
+                "video/mp4"
+            ];
+            return types.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+        }
+
+        async function openCamera(mode) {
+            cameraState.mode = mode;
+            document.getElementById('cameraModal').classList.remove('hidden');
+            document.getElementById('cameraTitle').innerText = mode === 'photo' ? 'Capture Live Photo' : 'Capture Live Video';
+            document.getElementById('capturePhotoBtn').classList.toggle('hidden', mode !== 'photo');
+            document.getElementById('startVideoBtn').classList.toggle('hidden', mode !== 'video');
+            document.getElementById('stopVideoBtn').classList.add('hidden');
+            document.getElementById('recordingBadge').classList.add('hidden');
+
+            try {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    closeCamera();
+                    alert('Live capture is not supported in this browser. Use "Upload from device" instead.');
+                    return;
+                }
+                const constraints = {
+                    video: { facingMode: { ideal: 'environment' } },
+                    audio: mode === 'video'
+                };
+                cameraState.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                const videoEl = document.getElementById('cameraPreview');
+                videoEl.srcObject = cameraState.stream;
+                await videoEl.play();
+            } catch (err) {
+                closeCamera();
+                alert('Camera access is required for live capture. Please allow permissions and try again.');
+            }
+        }
+
+        function closeCamera() {
+            stopCameraStream();
+            document.getElementById('cameraModal').classList.add('hidden');
+        }
+
+        function stopCameraStream() {
+            if (cameraState.recorder && cameraState.recorder.state !== 'inactive') {
+                cameraState.recorder.stop();
+            }
+            if (cameraState.stream) {
+                cameraState.stream.getTracks().forEach((track) => track.stop());
+            }
+            const videoEl = document.getElementById('cameraPreview');
+            if (videoEl) videoEl.srcObject = null;
+            cameraState.stream = null;
+            cameraState.recorder = null;
+            cameraState.chunks = [];
+        }
+
+        function capturePhoto() {
+            const videoEl = document.getElementById('cameraPreview');
+            const canvas = document.getElementById('photoCanvas');
+            canvas.width = videoEl.videoWidth || 1280;
+            canvas.height = videoEl.videoHeight || 720;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob((blob) => {
+                if (!blob) return;
+                const file = new File([blob], `claim_photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+                uploadedFiles.photo = file;
+                updateEvidenceStatus('photo', file.name);
+                closeCamera();
+            }, 'image/jpeg', 0.92);
+        }
+
+        function startVideoRecording() {
+            if (!cameraState.stream) return;
+            cameraState.chunks = [];
+            const mimeType = pickVideoMimeType();
+            let recorder;
+            try {
+                recorder = mimeType ? new MediaRecorder(cameraState.stream, { mimeType }) : new MediaRecorder(cameraState.stream);
+            } catch (err) {
+                alert('Video recording is not supported on this device.');
+                return;
+            }
+
+            cameraState.recorder = recorder;
+            recorder.ondataavailable = (event) => {
+                if (event.data && event.data.size > 0) cameraState.chunks.push(event.data);
+            };
+            recorder.onstop = () => {
+                const blob = new Blob(cameraState.chunks, { type: recorder.mimeType || 'video/webm' });
+                const file = new File([blob], `claim_video_${Date.now()}.webm`, { type: blob.type });
+                uploadedFiles.video = file;
+                updateEvidenceStatus('video', file.name);
+                closeCamera();
+            };
+
+            recorder.start();
+            document.getElementById('startVideoBtn').classList.add('hidden');
+            document.getElementById('stopVideoBtn').classList.remove('hidden');
+            document.getElementById('recordingBadge').classList.remove('hidden');
+        }
+
+        function stopVideoRecording() {
+            if (!cameraState.recorder || cameraState.recorder.state === 'inactive') return;
+            cameraState.recorder.stop();
+        }
+
+        async function uploadProofFile(claimId, type) {
+            const file = uploadedFiles[type];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('claim_id', claimId);
+            formData.append('proof_type', type);
+            
+            try {
+                await fetch('/api/proofs', { method: 'POST', body: formData });
+            } catch (e) {
+                console.warn(`Proof upload (${type}) failed:`, e);
+            }
+        }
+
+        // ── UPI Modal ──
+        function openUPIModal() {
+            document.getElementById('upiPayoutPreview').innerText = '₹' + currentPayoutAmount;
+            document.getElementById('upiClaimPreview').innerText = currentClaimId;
+            document.getElementById('upiModal').classList.remove('hidden');
+        }
+
+        function closeUPIModal() {
+            document.getElementById('upiModal').classList.add('hidden');
+        }
+
+        async function processUPITransfer() {
+            const upiId = document.getElementById('upiInput').value.trim();
+            if (!upiId || !upiId.includes('@')) {
+                alert('Please enter a valid UPI ID (e.g. yourname@upi)');
+                return;
+            }
+
+            const btn = document.getElementById('upiConfirmBtn');
+            btn.innerHTML = '<div class="animate-spin h-5 w-5 border-3 border-white border-t-transparent rounded-full"></div> Processing...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/claims/transfer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ claim_id: currentClaimId, payout_account: upiId })
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    closeUPIModal();
+                    showSuccessScreen(result, upiId);
+                    document.getElementById('withdrawBtn').classList.add('hidden');
+                    loadLedger();
+                } else {
+                    alert('Transfer Failed: ' + (result.detail || 'Unknown error'));
+                }
+            } catch (err) {
+                alert('Connection lost during transfer.');
+            } finally {
+                btn.innerHTML = '<span class="material-symbols-outlined">send</span> Confirm & Transfer';
+                btn.disabled = false;
+            }
+        }
+
+        // ── Success Screen ──
+        function showSuccessScreen(result, upiId) {
+            document.getElementById('successAmount').innerText = '₹' + (result.payout_amount || currentPayoutAmount);
+            document.getElementById('successTxnId').innerText = result.transaction_id || '--';
+            // Show UTR prominently if available
+            const utr = result.utr || result.transaction_id || '--';
+            document.getElementById('successUTR').innerText = utr;
+            document.getElementById('utrRow').classList.remove('hidden');
+            // Show gateway info
+            const gateway = result.gateway || 'mock_upi';
+            document.getElementById('successGateway').innerText = gateway === 'razorpay_sandbox' ? 'Razorpay Sandbox' : 'GigShield Mock UPI';
+            document.getElementById('successTimestamp').innerText = new Date(result.settled_at || Date.now()).toLocaleString('en-IN');
+            document.getElementById('successUPI').innerText = upiId;
+            document.getElementById('successScreen').classList.remove('hidden');
+        }
+
+        function closeSuccessScreen() {
+            document.getElementById('successScreen').classList.add('hidden');
+        }
+
+        // ── Init ──
+        document.addEventListener('DOMContentLoaded', () => {
+            const data = JSON.parse(sessionStorage.getItem('risk_results')) || { city: '--', platform: 'Zepto' };
+            document.getElementById('city').value = data.city;
+            document.getElementById('platform').value = data.platform;
+
+            initSpeechRecognition();
+
+            // GPS
+            if ("geolocation" in navigator) {
+                const btn = document.getElementById('submitBtn');
+                const btnText = document.getElementById('btnText');
+                const btnIcon = document.getElementById('btnIcon');
+
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    const { latitude, longitude, altitude, accuracy, altitudeAccuracy, heading, speed } = pos.coords;
+                    document.getElementById('lat').innerText = latitude.toFixed(4);
+                    document.getElementById('lng').innerText = longitude.toFixed(4);
+                    window.lastTelemetry = { latitude, longitude, altitude, accuracy, altitudeAccuracy, heading, speed, timestamp: pos.timestamp };
+
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+                        const geoData = await res.json();
+                        const detectedCity = geoData.address.city || geoData.address.town || geoData.address.village;
+                        if (detectedCity) document.getElementById('city').value = detectedCity;
+                    } catch (err) { console.warn("Geocoding failed:", err); }
+
+                    btn.disabled = false;
+                    btn.classList.remove('bg-surface-container-highest', 'text-secondary', 'cursor-not-allowed');
+                    btn.classList.add('bg-primary', 'text-white', 'shadow-primary/20');
+                    btnText.innerText = "Submit Claim for Verification";
+                    btnIcon.innerText = "verified";
+                }, () => {
+                    btnText.innerText = "Location Permission Required";
+                    btnIcon.innerText = "location_off";
+                });
+            }
+
+            loadLedger();
+        });
+
+        // ── Ledger ──
+        async function loadLedger() {
+            try {
+                const response = await fetch('/api/claims/ledger');
+                const data = await response.json();
+                const container = document.getElementById('ledgerContainer');
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<p class="text-center text-secondary py-8 text-xs font-bold uppercase tracking-widest opacity-40">No recent claims</p>`;
+                    return;
+                }
+
+                container.innerHTML = data.map(claim => {
+                    const isApproved = claim.status === 'APPROVED';
+                    const isSettled = claim.is_settled || false;
+                    return `
+                    <div class="flex items-center justify-between py-4 border-b border-surface-container-highest last:border-0 hover:bg-surface-container/50 px-4 rounded-xl transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full ${isApproved ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} flex items-center justify-center">
+                                <span class="material-symbols-outlined text-xl">${isApproved ? 'check_circle' : 'cancel'}</span>
+                            </div>
+                            <div>
+                                <p class="text-xs font-black text-primary uppercase tracking-widest">${claim.claim_id}</p>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-[0.6rem] text-secondary font-bold uppercase">${claim.reason || claim.status}</p>
+                                    ${isSettled ? '<span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[0.4rem] font-black rounded uppercase">PAID</span>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right flex flex-col items-end gap-2">
+                            <div>
+                                <p class="text-sm font-black text-primary">₹${(claim.payout_inr ?? claim.payout_amount ?? 0).toFixed(2)}</p>
+                                <p class="text-[0.5rem] text-secondary font-bold uppercase">${new Date(claim.processed_at || claim.timestamp).toLocaleTimeString()}</p>
+                            </div>
+                            ${isApproved && !isSettled ? `
+                                <button onclick="quickTransfer('${claim.claim_id}', ${claim.payout_inr ?? claim.payout_amount ?? 0})" class="px-3 py-1.5 bg-primary text-white text-[0.5rem] font-black uppercase rounded shadow hover:brightness-110 active:scale-95 transition-all">
+                                    Transfer
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (err) { console.error("Ledger load failed:", err); }
+        }
+
+        function quickTransfer(claimId, amount) {
+            currentClaimId = claimId;
+            currentPayoutAmount = amount;
+            openUPIModal();
+        }
+
+        // ── Submit Claim ──
+        document.getElementById('claimForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!uploadedFiles.photo && !uploadedFiles.video) {
+                alert("Please capture at least one piece of evidence (photo or video) before submitting.");
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            const text = document.getElementById('btnText');
+            const icon = document.getElementById('btnIcon');
+            const loader = document.getElementById('loader');
+
+            text.innerText = "Verifying Claim...";
+            loader.classList.remove('hidden');
+            icon.classList.add('hidden');
+            btn.disabled = true;
+
+            const riderNote = document.getElementById('evidence').value.trim();
+            const riderLang = document.getElementById('noteLanguage').value || navigator.language || null;
+            const additionalContext = document.getElementById('additionalContext').value.trim();
+            const claimData = {
+                driver_id: sessionStorage.getItem('driver_id') || "DRV-" + Math.random().toString(36).substr(2, 6).toUpperCase(),
+                location_query: document.getElementById('city').value,
+                category: document.getElementById('reason').value,
+                telemetry: {
+                    latitude: parseFloat(document.getElementById('lat').innerText) || 0,
+                    longitude: parseFloat(document.getElementById('lng').innerText) || 0,
+                    altitude: window.lastTelemetry?.altitude || 0,
+                    accuracy: window.lastTelemetry?.accuracy || 0,
+                    altitudeAccuracy: window.lastTelemetry?.altitudeAccuracy || 0,
+                    heading: window.lastTelemetry?.heading || 0,
+                    speed: window.lastTelemetry?.speed || 0,
+                    timestamp: window.lastTelemetry?.timestamp || Date.now()
+                },
+                is_webdriver: navigator.webdriver || false,
+                payout_account: null,
+                weekly_earnings: data.weekly_earnings || data.premium_breakdown?.weekly_earnings || null,
+                rider_note: additionalContext ? `${riderNote}\n\n${additionalContext}` : riderNote || null,
+                rider_note_lang: riderLang === 'auto' ? null : riderLang,
+                demo_payout_override: document.getElementById('demo_payout')?.value ? parseFloat(document.getElementById('demo_payout').value) : null,
+                demo_reason_override: document.getElementById('demo_reason')?.value || null
+            };
+
+            try {
+                const response = await fetch('/api/claims/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(claimData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+
+                    // Upload proofs in background
+                    uploadProofFile(result.claim_id, 'photo');
+                    uploadProofFile(result.claim_id, 'video');
+
+                    // Show verdict
+                    const vCard = document.getElementById('verdictCard');
+                    vCard.classList.remove('hidden');
+                    document.getElementById('verdictStatus').innerText = result.status;
+                    document.getElementById('verdictStatus').className = result.status === 'APPROVED'
+                        ? "px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-[0.6rem] font-black uppercase tracking-widest"
+                        : "px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-[0.6rem] font-black uppercase tracking-widest";
+
+                    currentPayoutAmount = result.payout_inr || 0;
+                    currentClaimId = result.claim_id;
+
+                    document.getElementById('payoutAmount').innerText = '₹' + currentPayoutAmount;
+                    document.getElementById('verdictText').innerText = result.reason;
+                    document.getElementById('verdictClaimId').innerText = result.claim_id;
+
+                    const withdrawBtn = document.getElementById('withdrawBtn');
+                    if (result.status === 'APPROVED') {
+                        withdrawBtn.classList.remove('hidden');
+                    } else {
+                        withdrawBtn.classList.add('hidden');
+                    }
+
+                    vCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    loadLedger();
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    alert("Claim verification failed: " + (errData.detail || "Check oracle connection."));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Connection lost. Please retry.");
+            } finally {
+                btn.disabled = false;
+                text.innerText = "Submit Claim for Verification";
+                icon.classList.remove('hidden');
+                loader.classList.add('hidden');
+            }
+        });
+
+        // ── Demo Mode ──
+        async function fetchDemoStatus() {
+            try {
+                const res = await fetch('/api/demo/status');
+                const data = await res.json();
+                updateDemoUI(data.demo_mode);
+            } catch (e) {}
+        }
+
+        async function toggleDemoMode() {
+            try {
+                const res = await fetch('/api/demo/toggle', { method: 'POST' });
+                const data = await res.json();
+                updateDemoUI(data.demo_mode);
+            } catch (e) { console.error("Simulation mode toggle failed."); }
+        }
+
+        async function resetDemoLedger() {
+            if (!confirm("Reset the entire claims ledger?")) return;
+            try {
+                const res = await fetch('/api/demo/reset', { method: 'POST' });
+                if (res.ok) { loadLedger(); }
+            } catch (e) { alert("Reset failed."); }
+        }
+
+        function updateDemoUI(isActive) {
+            const indicator = document.getElementById('demoIndicator');
+            const label = document.getElementById('demoLabel');
+            const overrides = document.getElementById('demoOverrides');
+            if (!indicator || !label) return;
+
+            if (isActive) {
+                indicator.classList.remove('bg-secondary');
+                indicator.classList.add('bg-amber-500', 'animate-pulse');
+                label.innerText = 'Simulation: On';
+                label.classList.remove('text-secondary'); label.classList.add('text-amber-600');
+                if (overrides) overrides.classList.remove('hidden');
+            } else {
+                indicator.classList.add('bg-secondary');
+                indicator.classList.remove('bg-amber-500', 'animate-pulse');
+                label.innerText = 'Simulation: Off';
+                label.classList.add('text-secondary'); label.classList.remove('text-amber-600');
+                if (overrides) overrides.classList.add('hidden');
+            }
+        }
+
+        fetchDemoStatus();
+    </script>
+
+</body>
+</html>

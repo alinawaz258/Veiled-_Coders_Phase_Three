@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Activate Protection | GigShield AI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#0d9488",
+                        "primary-container": "#008378",
+                        "on-primary": "#ffffff",
+                        "surface": "#f9f9fb",
+                        "on-surface": "#1a1c1d",
+                        "on-surface-variant": "#3d4947",
+                        "outline": "#6d7a77",
+                        "secondary": "#5f5e63",
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3.5rem",
+                    },
+                    "fontFamily": {
+                        "sans": ["Inter", "sans-serif"],
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f9f9fb;
+            color: #1a1c1d;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-nav {
+            background: rgba(249, 249, 251, 0.8);
+            backdrop-filter: blur(24px);
+        }
+        .step-active {
+            color: #0d9488;
+            font-weight: 800;
+            border-bottom: 3px solid #0d9488;
+        }
+        .payment-card {
+            background: #ffffff;
+            border: 1px solid #eeeef0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .payment-card:hover {
+            border-color: #0d9488;
+            box-shadow: 0 10px 40px -10px rgba(13, 148, 136, 0.1);
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.33); opacity: 0; }
+            80%, 100% { opacity: 0; }
+        }
+        .pulse-btn::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 9999px;
+            background-color: rgba(13, 148, 136, 0.4);
+            z-index: -1;
+            animation: pulse-ring 1.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-32" data-role="user">
+    <script src="auth_guard.js"></script>
+
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-nav px-8 py-5 flex justify-between items-center border-b border-surface-container">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">bolt</span>
+            </div>
+            <a href="worker_dashboard.html" class="text-xl font-extrabold tracking-tighter">GigShield AI</a>
+        </div>
+        <div class="flex gap-8 text-[0.65rem] font-black uppercase tracking-widest text-secondary">
+            <span class="flex items-center gap-2 text-primary"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span> 01 Audit</span>
+            <span class="flex items-center gap-2 text-primary font-black border-b-2 border-primary pb-1">02 Activation</span>
+            <span class="opacity-30">03 Compliance</span>
+        </div>
+        <a href="assessment.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Risk Assessment</a>
+        <a href="results.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Forensic Ledger</a>
+        <a href="claims.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Claims</a>
+        <a href="auditor.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Auditor</a>
+        <a href="#" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Policy</a>
+        <button onclick="logoutUser()" class="px-3 py-1.5 rounded-full border border-surface-container text-[0.6rem] font-black uppercase tracking-widest text-secondary hover:text-primary hover:border-primary/40 transition-all">
+            Logout
+        </button>
+        <div class="w-px h-6 bg-surface-container"></div>
+    </nav>
+
+    <main class="pt-32 px-8 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
+        
+        <!-- Left: Policy Summary -->
+        <div class="lg:col-span-12 mb-4">
+            <h1 class="text-5xl font-extrabold tracking-tighter mb-4">Secure Protection.</h1>
+            <p id="cityDisplay" class="text-lg text-primary font-bold uppercase tracking-widest mt-2">-- Operational Zone</p>
+            <p class="text-on-surface-variant max-w-xl text-lg">Finalize your parametric handshake with our real-time oracle grid.</p>
+        </div>
+
+        <div class="lg:col-span-7 space-y-8">
+            <section class="payment-card p-10 rounded-xl space-y-8">
+                <div class="flex justify-between items-start">
+                    <div class="space-y-1">
+                        <h3 class="text-2xl font-extrabold">Plan Summary</h3>
+                        <p class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-secondary">Policy Tier: <span id="policyTier" class="text-primary">--</span></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-8 border-y border-surface-container py-8">
+                    <div class="space-y-1">
+                        <span class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Premium Amount</span>
+                        <div id="premiumDisplay" class="text-3xl font-extrabold tracking-tight">₹--</div>
+                        <p class="text-[0.6rem] font-medium text-secondary">Weekly subscription billing</p>
+                    </div>
+                    <div class="space-y-1">
+                        <span class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Settlement Mode</span>
+                        <div class="text-3xl font-extrabold tracking-tight flex items-center gap-2">
+                            Instant
+                            <span class="material-symbols-outlined text-primary text-2xl">bolt</span>
+                        </div>
+                        <p class="text-[0.6rem] font-medium text-secondary">Zero moratorium period</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h4 class="text-[0.65rem] font-black uppercase tracking-widest text-on-surface-variant flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-lg">verified</span>
+                        Verified Triggers
+                    </h4>
+                    <div class="flex flex-wrap gap-2" id="triggerList">
+                        <!-- Dynamic Triggers -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Coverage Card -->
+            <div class="payment-card p-8 rounded-xl bg-primary/5 border-primary/10 border flex gap-6 items-start">
+                <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary flex-shrink-0">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
+                </div>
+                <div class="space-y-2">
+                    <h4 class="font-extrabold text-sm tracking-tight text-primary">Parametric Resilience Guarantee</h4>
+                    <p class="text-xs text-on-surface-variant leading-relaxed font-medium">
+                        Your policy is automatically tethered to the city oracle. In the event of confirmed disruption (Rainfall >5mm/h or Traffic Congestion >30%), settlements are triggered instantly without requiring claim filing.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: UPI Payment -->
+        <div class="lg:col-span-5">
+            <div id="paymentModule" class="payment-card p-10 rounded-xl space-y-10 sticky top-32">
+                <div class="space-y-1">
+                    <h3 class="text-2xl font-extrabold tracking-tighter">Link UPI</h3>
+                    <p class="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-secondary uppercase">Secure Transaction Gateway</p>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="space-y-3">
+                        <label class="text-[0.6rem] font-black tracking-widest uppercase text-secondary">Your UPI ID</label>
+                        <div class="relative">
+                            <input id="upiInput" type="text" placeholder="username@upi" class="w-full bg-surface-container-low border-none rounded-xl p-5 text-sm font-bold tracking-tight focus:ring-2 focus:ring-primary transition-all placeholder:text-secondary/40">
+                            <div id="verifyBadge" class="hidden absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[0.6rem] font-black text-primary uppercase">
+                                <span class="material-symbols-outlined text-sm">check_circle</span>
+                                Verified
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center px-2">
+                            <span class="text-xs font-bold text-secondary">Total Activation Fee</span>
+                            <span id="finalTotalDisplay" class="text-lg font-extrabold tracking-tight">₹--</span>
+                        </div>
+                        
+                        <button id="payBtn" disabled class="w-full bg-surface-container-highest text-secondary cursor-not-allowed py-6 rounded-full font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 transition-all relative">
+                            Enter UPI ID to Proceed
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 pt-4 grayscale opacity-50 justify-center">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/UPI-Logo.png" class="h-4 object-contain" alt="UPI">
+                    <div class="w-px h-4 bg-surface-container"></div>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Rupay-Logo.png/640px-Rupay-Logo.png" class="h-3 object-contain" alt="RuPay">
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success Overlay -->
+    <div id="successOverlay" class="hidden fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center space-y-10 p-12">
+        <div id="animationContainer" class="w-48 h-48 relative flex items-center justify-center">
+            <!-- Dynamic Parametric Animation -->
+            <div class="absolute inset-0 border-4 border-primary/20 rounded-full animate-ping"></div>
+            <div class="w-32 h-32 bg-primary rounded-full flex items-center justify-center shadow-2xl shadow-primary/40 relative z-10 transition-all duration-1000 transform scale-0" id="successIcon">
+                <span class="material-symbols-outlined text-white text-6xl" style="font-variation-settings: 'wght' 600;">check</span>
+            </div>
+        </div>
+
+        <div class="text-center space-y-4 max-w-lg">
+            <h2 class="text-5xl font-extrabold tracking-tighter">Policy Activated.</h2>
+            <p class="text-lg text-on-surface-variant font-medium">Your parametric handshake is now live within the Architectural Ledger.</p>
+            
+            <div class="bg-surface-container-low p-8 rounded-xl border border-surface-container space-y-6 mt-8">
+                <div class="grid grid-cols-2 gap-8 text-left">
+                    <div class="space-y-1">
+                        <span class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Policy ID</span>
+                        <div id="finalPolicyId" class="text-sm font-black text-primary">GS-PRO-9923184</div>
+                    </div>
+                    <div class="space-y-1 text-right">
+                        <span class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary">Status</span>
+                        <div class="text-sm font-black text-emerald-600">LIVE</div>
+                    </div>
+                </div>
+                <button onclick="window.location.href='index.html'" class="w-full bg-on-surface text-white py-5 rounded-full font-extrabold text-sm uppercase tracking-widest hover:bg-black transition-all">
+                    Return to Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const data = JSON.parse(sessionStorage.getItem('risk_results'));
+            if (!data) {
+                window.location.href = 'results.html';
+                return;
+            }
+
+            // Populate data
+            document.getElementById('policyTier').innerText = data.policy_terms.plan;
+            document.getElementById('premiumDisplay').innerText = '₹' + data.premium_breakdown.total_premium_inr;
+            document.getElementById('finalTotalDisplay').innerText = '₹' + data.premium_breakdown.total_premium_inr;
+            
+            // Update City Title
+            document.getElementById('cityDisplay').innerText = data.city.toUpperCase() + ' OPERATIONAL ZONE';
+
+            const triggers = data.policy_terms.covered_triggers || ['Heavy Rainfall', 'Extreme Temperature', 'Traffic GRID-LOCK', 'Night Curfews'];
+            document.getElementById('triggerList').innerHTML = triggers.map(t => `
+                <span class="px-3 py-1.5 bg-surface-container-highest rounded-full text-[0.6rem] font-bold uppercase tracking-widest text-on-surface-variant">
+                    ${t}
+                </span>
+            `).join('');
+
+            // UPI Validation Logic
+            const upiInput = document.getElementById('upiInput');
+            const payBtn = document.getElementById('payBtn');
+            const verifyBadge = document.getElementById('verifyBadge');
+
+            upiInput.addEventListener('input', (e) => {
+                const val = e.target.value;
+                if (val.includes('@') && val.length > 5) {
+                    verifyBadge.classList.remove('hidden');
+                    payBtn.disabled = false;
+                    payBtn.classList.remove('bg-surface-container-highest', 'text-secondary', 'cursor-not-allowed');
+                    payBtn.classList.add('bg-primary', 'text-white', 'pulse-btn', 'shadow-xl', 'shadow-primary/20');
+                    payBtn.innerText = 'Pay & Activate';
+                } else {
+                    verifyBadge.classList.add('hidden');
+                    payBtn.disabled = true;
+                    payBtn.classList.add('bg-surface-container-highest', 'text-secondary', 'cursor-not-allowed');
+                    payBtn.classList.remove('bg-primary', 'text-white', 'pulse-btn', 'shadow-xl', 'shadow-primary/20');
+                    payBtn.innerText = 'Enter UPI ID to Proceed';
+                }
+            });
+
+            // Payment Execution
+            payBtn.addEventListener('click', () => {
+                payBtn.disabled = true;
+                payBtn.innerText = 'Syncing with Oracle...';
+                
+                // Simulate Parametric Activation
+                setTimeout(() => {
+                    const overlay = document.getElementById('successOverlay');
+                    overlay.classList.remove('hidden');
+                    overlay.style.opacity = '0';
+                    overlay.classList.add('transition-opacity', 'duration-500');
+                    setTimeout(() => overlay.style.opacity = '1', 10);
+                    
+                    setTimeout(() => {
+                        const icon = document.getElementById('successIcon');
+                        icon.classList.remove('scale-0');
+                        icon.classList.add('scale-100');
+                        
+                        // Generate dynamic Policy ID
+                        const randomId = 'GS-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.floor(1000 + Math.random() * 9000);
+                        document.getElementById('finalPolicyId').innerText = randomId;
+                    }, 300);
+                }, 2000);
+            });
+        });
+    </script>
+
+</body>
+</html>

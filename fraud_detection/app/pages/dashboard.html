@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GigShield | Cockpit Dashboard</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <header class="cockpit-header">
+        <div class="brand">GIGSHIELD FORENSIC</div>
+        <nav class="nav-links">
+            <a href="/">HOME</a>
+            <a href="/dashboard" class="active">DASHBOARD</a>
+            <a href="/claims">CLAIMS</a>
+            <a href="/policy">POLICY</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Top Metrics Row -->
+        <div class="dashboard-grid" id="metric-cards">
+            <!-- Populated by app.js -->
+            <div class="panel metric-card">
+                <div class="metric-label">SYSTEM INITIALIZING...</div>
+                <div class="metric-value">--</div>
+            </div>
+            <div class="panel metric-card">
+                <div class="metric-label">ORACLE UPTIME</div>
+                <div class="metric-value">99.9%</div>
+            </div>
+            <div class="panel metric-card">
+                <div class="metric-label">NETWORK STATUS</div>
+                <div class="metric-value" style="color: var(--neon-teal);">ONLINE</div>
+            </div>
+            <div class="panel metric-card">
+                <div class="metric-label">FRAUD LOCKS</div>
+                <div class="metric-value">PROTECTED</div>
+            </div>
+        </div>
+
+        <!-- Charts and Registry Row -->
+        <div class="dashboard-grid" style="margin-top: 20px; grid-template-columns: 1.5fr 1fr 1fr;">
+            <div class="panel">
+                <h3 style="margin-bottom: 20px;">Risk Scenarios & Forensic Telemetry</h3>
+                <div class="viz-container">
+                    <canvas id="riskChart"></canvas>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="scan-line"></div>
+                <h3 style="margin-bottom: 20px;">Forensic Satellite Uplink</h3>
+                <div
+                    style="height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.4); border: 1px solid rgba(0,242,255,0.1); position: relative;">
+                    <div
+                        style="font-family: 'DM Mono'; font-size: 0.75rem; color: var(--neon-teal); text-align: center; line-height: 1.5;">
+                        SATELLITE STATUS: <span id="orbit-status">ORBITAL LOCK</span><br>
+                        COORDS: <span id="orbit-coords">0.000, 0.000</span><br>
+                        <span id="orbit-time" style="color: var(--neon-amber);">SCANNING...</span>
+                    </div>
+                    <div
+                        style="position: absolute; width: 100%; height: 100%; top: 0; left:0; background: radial-gradient(circle, rgba(0,242,255,0.05), transparent);">
+                    </div>
+                </div>
+                <a id="satellite-link" href="#" target="_blank" class="btn-primary"
+                    style="display: block; width: 100%; margin-top: 15px; text-decoration: none; text-align: center; font-size: 0.75rem;">LAUNCH
+                    SATELLITE ORACLE</a>
+            </div>
+            <div class="panel">
+                <h3 style="margin-bottom: 20px;">Live Forensic Logs</h3>
+                <div class="forensic-log" id="forensic-logs">
+                    <!-- Populated by app.js -->
+                    <div class="log-entry"><span class="log-timestamp">[01:52:10]</span> <span class="log-msg">SYSTEM:
+                            Forensic Auditor initialized.</span></div>
+                    <div class="log-entry"><span class="log-timestamp">[01:52:12]</span> <span class="log-msg">ORACLE:
+                            Connection to Open-Meteo established.</span></div>
+                    <div class="log-entry"><span class="log-timestamp">[01:52:13]</span> <span
+                            class="log-msg">GEOSPATIAL: Nominatim oracle status: HEALTHY.</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Driver Registry Row -->
+        <div class="panel" style="margin-top: 20px;">
+            <h3 style="margin-bottom: 20px;">Forensic Driver Registry</h3>
+            <table class="forensic-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>NAME</th>
+                        <th>STRIKES</th>
+                        <th>RISK SCORE</th>
+                        <th>STATUS</th>
+                    </tr>
+                </thead>
+                <tbody id="driver-rows">
+                    <!-- Populated by app.js -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

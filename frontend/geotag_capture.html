@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GeoTag Capture</title>
+  <meta name="color-scheme" content="dark" />
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f9f9fb;
+      --bg-alt: #f3f3f5;
+      --panel: #ffffff;
+      --panel-2: #f3f3f5;
+      --text: #1a1c1d;
+      --muted: #5f5e63;
+      --accent: #0d9488;
+      --accent-2: #008378;
+      --danger: #ef4444;
+      --success: #10b981;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      --radius: 1rem;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    main {
+      width: min(1100px, 100%);
+      display: grid;
+      gap: 24px;
+    }
+
+    header {
+      display: grid;
+      gap: 10px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: clamp(26px, 4vw, 38px);
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 680px;
+      line-height: 1.6;
+    }
+
+    .layout {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .card {
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid #eeeef0;
+    }
+
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      letter-spacing: 0.02em;
+    }
+
+    .actions {
+      display: grid;
+      gap: 12px;
+    }
+
+    button {
+      border: none;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 4px 10px rgba(13, 148, 136, 0.3);
+    }
+
+    .secondary {
+      background: var(--bg-alt);
+      color: var(--text);
+      border: none;
+    }
+
+    .warn {
+      background: rgba(255, 107, 107, 0.12);
+      color: #ffd6d6;
+      border: 1px solid rgba(255, 107, 107, 0.4);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(88, 194, 255, 0.12);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status {
+      display: grid;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 80px;
+    }
+
+    .status strong {
+      color: var(--text);
+    }
+
+    .camera-frame {
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #e5e7eb;
+      position: relative;
+      min-height: 260px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #eeeef0;
+    }
+
+    video, canvas, img.preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .fallback {
+      display: none;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 16px;
+      border-radius: calc(var(--radius) - 8px);
+      border: 1px dashed rgba(88, 194, 255, 0.45);
+      pointer-events: none;
+    }
+
+    .badge {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      padding: 6px 10px;
+      background: rgba(12, 18, 30, 0.7);
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .preview-card {
+      display: grid;
+      gap: 12px;
+    }
+
+    .preview-meta {
+      display: grid;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .preview-meta span {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .notice {
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255, 184, 102, 0.12);
+      color: #ffd9a8;
+      border: 1px solid rgba(255, 184, 102, 0.5);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .error {
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255, 107, 107, 0.12);
+      color: #ffd6d6;
+      border: 1px solid rgba(255, 107, 107, 0.5);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 16px;
+      }
+
+      header h1 {
+        font-size: 26px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body data-role="user">
+  <script src="auth_guard.js"></script>
+  <main>
+    <header>
+      <div class="pill"><i data-lucide="satellite"></i> Secure geo-capture</div>
+      <h1>Capture. Geotag. Download.</h1>
+      <p>Capture a photo, inject live GPS metadata, and export a certified JPEG with EXIF GPS tags. Works best on HTTPS with location + camera permissions.</p>
+    </header>
+
+    <section class="layout">
+      <div class="card">
+        <h2>Permissions & Status</h2>
+        <div class="status" id="status">
+          <div><strong>Camera:</strong> <span id="camera-status">Pending</span></div>
+          <div><strong>Location:</strong> <span id="geo-status">Pending</span></div>
+          <div><strong>EXIF:</strong> <span id="exif-status">Ready</span></div>
+        </div>
+        <div class="actions">
+          <button class="primary" id="check-permissions"><i data-lucide="shield-check"></i> Check & Request</button>
+          <button class="secondary" id="start-camera" disabled><i data-lucide="camera"></i> Start Camera</button>
+          <button class="secondary" id="capture-photo" disabled><i data-lucide="aperture"></i> Capture Photo</button>
+          <button class="secondary" id="start-video" disabled><i data-lucide="video"></i> Start Recording</button>
+          <button class="secondary" id="stop-video" disabled><i data-lucide="square"></i> Stop Recording</button>
+        </div>
+        <div class="actions" style="margin-top: 12px;">
+          <label style="font-size: 12px; color: var(--muted);">API Base URL</label>
+          <input id="api-base" type="text" value="" style="padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); background: rgba(10,14,24,0.6); color: var(--text);" />
+          <div style="font-size: 11px; color: var(--muted);">Tip: the backend runs on HTTP by default, even if this page is on HTTPS.</div>
+          <label style="font-size: 12px; color: var(--muted);">Auth Token (Bearer)</label>
+          <input id="auth-token" type="password" placeholder="Paste JWT token" style="padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); background: rgba(10,14,24,0.6); color: var(--text);" />
+        </div>
+        <div id="message" class="notice" hidden></div>
+        <div id="error" class="error" hidden></div>
+      </div>
+
+      <div class="card">
+        <h2>Live Camera</h2>
+        <div class="camera-frame">
+          <video id="video" autoplay playsinline></video>
+          <canvas id="canvas" class="fallback"></canvas>
+          <div class="overlay"></div>
+          <div class="badge" id="camera-badge">Idle</div>
+        </div>
+      </div>
+
+      <div class="card preview-card">
+        <h2>Preview & Export</h2>
+        <img class="preview" id="preview" alt="Captured preview" />
+        <video class="preview" id="video-preview" controls></video>
+        <div class="preview-meta">
+          <div>Location: <span id="place-display">--</span></div>
+          <div>Latitude: <span id="lat-display">--</span></div>
+          <div>Longitude: <span id="lng-display">--</span></div>
+          <div>Timestamp: <span id="time-display">--</span></div>
+        </div>
+        <button class="primary" id="download" disabled><i data-lucide="download"></i> Download Geotagged JPG</button>
+        <button class="secondary" id="download-video" disabled><i data-lucide="download"></i> Download Video</button>
+        <button class="secondary" id="send-proof" disabled><i data-lucide="cloud-upload"></i> Send Proof to Database</button>
+        <button class="secondary" id="send-video" disabled><i data-lucide="cloud-upload"></i> Send Video to Database</button>
+        <button class="secondary" id="recapture" disabled><i data-lucide="refresh-ccw"></i> Re-capture</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js"></script>
+  <script src="https://unpkg.com/lucide@0.452.0/dist/umd/lucide.js"></script>
+  <script>
+    class GeoTagger {
+      constructor() {
+        this.coords = null;
+        this.exifImage = null;
+        this.placeName = null;
+      }
+
+      async getLocation() {
+        if (!("geolocation" in navigator)) {
+          throw new Error("Geolocation is not supported in this browser.");
+        }
+
+        return new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const { latitude, longitude } = position.coords;
+              this.coords = { latitude, longitude };
+              resolve(this.coords);
+            },
+            (error) => {
+              const message = this.getGeoError(error);
+              reject(new Error(message));
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+          );
+        });
+      }
+
+      async resolvePlaceName() {
+        if (!this.coords) {
+          throw new Error("GPS coordinates are missing.");
+        }
+        const { latitude, longitude } = this.coords;
+        const url = new URL("https://nominatim.openstreetmap.org/reverse");
+        url.searchParams.set("format", "jsonv2");
+        url.searchParams.set("lat", latitude);
+        url.searchParams.set("lon", longitude);
+        url.searchParams.set("zoom", "18");
+        url.searchParams.set("addressdetails", "1");
+
+        const response = await fetch(url.toString(), {
+          headers: { "Accept": "application/json" },
+        });
+        if (!response.ok) {
+          throw new Error("Unable to resolve the location name.");
+        }
+        const data = await response.json();
+        this.placeName = data.display_name || "Unknown location";
+        return this.placeName;
+      }
+
+      getGeoError(error) {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            return "Location access was denied. We need it to embed GPS metadata into your photo.";
+          case error.POSITION_UNAVAILABLE:
+            return "GPS signal is unavailable. Try moving closer to a window or retry.";
+          case error.TIMEOUT:
+            return "Location timed out. Please retry with a stronger signal.";
+          default:
+            return "Location failed unexpectedly. Please retry.";
+        }
+      }
+
+      decimalToDms(decimal) {
+        const absolute = Math.abs(decimal);
+        const degrees = Math.floor(absolute);
+        const minutesFloat = (absolute - degrees) * 60;
+        const minutes = Math.floor(minutesFloat);
+        const secondsFloat = (minutesFloat - minutes) * 60;
+
+        // EXIF requires rational values: [numerator, denominator] pairs.
+        // Seconds need precision; we scale by 100 to keep two decimal places.
+        const seconds = Math.round(secondsFloat * 100);
+        return [
+          [degrees, 1],
+          [minutes, 1],
+          [seconds, 100],
+        ];
+      }
+
+      buildGpsIfd() {
+        if (!this.coords) {
+          throw new Error("GPS coordinates are missing.");
+        }
+        const { latitude, longitude } = this.coords;
+        return {
+          [piexif.GPSIFD.GPSLatitudeRef]: latitude >= 0 ? "N" : "S",
+          [piexif.GPSIFD.GPSLatitude]: this.decimalToDms(latitude),
+          [piexif.GPSIFD.GPSLongitudeRef]: longitude >= 0 ? "E" : "W",
+          [piexif.GPSIFD.GPSLongitude]: this.decimalToDms(longitude),
+        };
+      }
+
+      injectExif(base64Image) {
+        const zeroth = {};
+        if (this.placeName) {
+          zeroth[piexif.ImageIFD.ImageDescription] = this.placeName;
+        }
+        const exif = {};
+        const gps = this.buildGpsIfd();
+        const exifObj = { "0th": zeroth, Exif: exif, GPS: gps };
+        const exifBytes = piexif.dump(exifObj);
+        this.exifImage = piexif.insert(exifBytes, base64Image);
+        return this.exifImage;
+      }
+    }
+
+    class CameraApp {
+      constructor() {
+        this.geoTagger = new GeoTagger();
+        this.stream = null;
+        this.rawImage = null;
+        this.previewUrl = null;
+
+        this.video = document.getElementById("video");
+        this.canvas = document.getElementById("canvas");
+        this.preview = document.getElementById("preview");
+        this.videoPreview = document.getElementById("video-preview");
+
+        this.cameraStatus = document.getElementById("camera-status");
+        this.geoStatus = document.getElementById("geo-status");
+        this.exifStatus = document.getElementById("exif-status");
+        this.message = document.getElementById("message");
+        this.error = document.getElementById("error");
+        this.cameraBadge = document.getElementById("camera-badge");
+
+        this.latDisplay = document.getElementById("lat-display");
+        this.lngDisplay = document.getElementById("lng-display");
+        this.placeDisplay = document.getElementById("place-display");
+        this.timeDisplay = document.getElementById("time-display");
+        this.apiBaseInput = document.getElementById("api-base");
+        this.tokenInput = document.getElementById("auth-token");
+
+        this.checkButton = document.getElementById("check-permissions");
+        this.startButton = document.getElementById("start-camera");
+        this.captureButton = document.getElementById("capture-photo");
+        this.downloadButton = document.getElementById("download");
+        this.downloadVideoButton = document.getElementById("download-video");
+        this.sendProofButton = document.getElementById("send-proof");
+        this.sendVideoButton = document.getElementById("send-video");
+        this.recaptureButton = document.getElementById("recapture");
+        this.startVideoButton = document.getElementById("start-video");
+        this.stopVideoButton = document.getElementById("stop-video");
+
+        this.mediaRecorder = null;
+        this.videoChunks = [];
+        this.videoUrl = null;
+
+        this.bindEvents();
+        lucide.createIcons();
+      }
+
+      bindEvents() {
+        this.checkButton.addEventListener("click", () => this.checkPermissions());
+        this.startButton.addEventListener("click", () => this.startCamera());
+        this.captureButton.addEventListener("click", () => this.capturePhoto());
+        this.downloadButton.addEventListener("click", () => this.downloadPhoto());
+        this.downloadVideoButton.addEventListener("click", () => this.downloadVideo());
+        this.sendProofButton.addEventListener("click", () => this.sendProof());
+        this.sendVideoButton.addEventListener("click", () => this.sendVideoProof());
+        this.recaptureButton.addEventListener("click", () => this.resetCapture());
+        this.startVideoButton.addEventListener("click", () => this.startRecording());
+        this.stopVideoButton.addEventListener("click", () => this.stopRecording());
+      }
+
+      setMessage(text, type = "notice") {
+        const target = type === "error" ? this.error : this.message;
+        const other = type === "error" ? this.message : this.error;
+        target.textContent = text;
+        target.hidden = false;
+        other.hidden = true;
+      }
+
+      clearMessage() {
+        this.message.hidden = true;
+        this.error.hidden = true;
+      }
+
+      async checkPermissions() {
+        this.clearMessage();
+        this.setStatus(this.cameraStatus, "Checking...");
+        this.setStatus(this.geoStatus, "Checking...");
+
+        const cameraOk = await this.requestCameraPermission();
+        const geoOk = await this.requestGeoPermission();
+
+        if (cameraOk && geoOk) {
+          this.setMessage("Permissions granted. You can start the camera now.");
+        }
+      }
+
+      async requestCameraPermission() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          this.setStatus(this.cameraStatus, "Unavailable");
+          this.setMessage("Camera access is not supported in this browser.", "error");
+          return false;
+        }
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          stream.getTracks().forEach((track) => track.stop());
+          this.setStatus(this.cameraStatus, "Granted", "success");
+          this.startButton.disabled = false;
+          return true;
+        } catch (error) {
+          this.setStatus(this.cameraStatus, "Denied", "danger");
+          this.setMessage("Camera access was denied. Enable it to capture photos.", "error");
+          return false;
+        }
+      }
+
+      async requestGeoPermission() {
+        try {
+          await this.geoTagger.getLocation();
+          await this.geoTagger.resolvePlaceName();
+          this.setStatus(this.geoStatus, "Granted", "success");
+          this.updateCoordDisplay();
+          return true;
+        } catch (error) {
+          this.setStatus(this.geoStatus, "Denied", "danger");
+          this.setMessage(error.message, "error");
+          return false;
+        }
+      }
+
+      setStatus(element, text, state = "neutral") {
+        element.textContent = text;
+        element.style.color = this.getStatusColor(state);
+      }
+
+      getStatusColor(state) {
+        if (state === "success") return "var(--success)";
+        if (state === "danger") return "var(--danger)";
+        return "var(--muted)";
+      }
+
+      async startCamera() {
+        this.clearMessage();
+        try {
+          this.stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: "environment" } },
+            audio: false,
+          });
+          this.video.srcObject = this.stream;
+          this.cameraBadge.textContent = "Live";
+          this.captureButton.disabled = false;
+          this.startVideoButton.disabled = false;
+          this.setStatus(this.cameraStatus, "Streaming", "success");
+        } catch (error) {
+          this.setStatus(this.cameraStatus, "Unavailable", "danger");
+          this.setMessage("Unable to start camera. Please retry.", "error");
+        }
+      }
+
+      startRecording() {
+        if (!this.stream) {
+          this.setMessage("Start the camera first.", "error");
+          return;
+        }
+        if (!window.MediaRecorder) {
+          this.setMessage("Video recording is not supported in this browser.", "error");
+          return;
+        }
+
+        this.clearMessage();
+        this.videoChunks = [];
+        this.mediaRecorder = new MediaRecorder(this.stream, { mimeType: "video/webm" });
+        this.mediaRecorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            this.videoChunks.push(event.data);
+          }
+        };
+        this.mediaRecorder.onstop = () => {
+          const blob = new Blob(this.videoChunks, { type: "video/webm" });
+          if (this.videoUrl) {
+            URL.revokeObjectURL(this.videoUrl);
+          }
+          this.videoUrl = URL.createObjectURL(blob);
+          this.videoPreview.src = this.videoUrl;
+          this.downloadVideoButton.disabled = false;
+          this.sendVideoButton.disabled = false;
+          sessionStorage.setItem('captured_media_video', 'true');
+          this.setMessage("Video Saved! Redirecting back to Claims...", "success");
+          setTimeout(() => { window.location.href = "claims.html"; }, 1500);
+        };
+
+        this.mediaRecorder.start();
+        this.startVideoButton.disabled = true;
+        this.stopVideoButton.disabled = false;
+        this.cameraBadge.textContent = "Recording";
+      }
+
+      stopRecording() {
+        if (!this.mediaRecorder || this.mediaRecorder.state !== "recording") {
+          return;
+        }
+        this.mediaRecorder.stop();
+        this.startVideoButton.disabled = false;
+        this.stopVideoButton.disabled = true;
+        this.cameraBadge.textContent = "Live";
+      }
+
+      async capturePhoto() {
+        this.clearMessage();
+        if (!this.stream) {
+          this.setMessage("Start the camera first.", "error");
+          return;
+        }
+
+        if (!this.geoTagger.coords) {
+          await this.requestGeoPermission();
+          if (!this.geoTagger.coords) return;
+        }
+
+        const track = this.stream.getVideoTracks()[0];
+        const settings = track.getSettings();
+        this.canvas.width = settings.width || this.video.videoWidth;
+        this.canvas.height = settings.height || this.video.videoHeight;
+        const context = this.canvas.getContext("2d");
+        context.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+        const dataUrl = this.canvas.toDataURL("image/jpeg", 0.92);
+        this.handleImage(dataUrl);
+      }
+
+      handleImage(base64) {
+        try {
+          const tagged = this.geoTagger.injectExif(base64);
+          this.rawImage = tagged;
+          this.preview.src = tagged;
+          this.previewUrl = tagged;
+          this.setStatus(this.exifStatus, "Embedded", "success");
+          this.downloadButton.disabled = false;
+          this.sendProofButton.disabled = false;
+          this.recaptureButton.disabled = false;
+          this.updateCoordDisplay();
+          this.timeDisplay.textContent = new Date().toLocaleString();
+          sessionStorage.setItem('captured_media_photo', 'true');
+          this.setMessage("Captured! Redirecting back to Claims...", "success");
+          setTimeout(() => { window.location.href = "claims.html"; }, 1500);
+        } catch (error) {
+          this.setMessage(error.message, "error");
+        }
+      }
+
+      updateCoordDisplay() {
+        if (!this.geoTagger.coords) return;
+        const { latitude, longitude } = this.geoTagger.coords;
+        this.latDisplay.textContent = latitude.toFixed(6);
+        this.lngDisplay.textContent = longitude.toFixed(6);
+        this.placeDisplay.textContent = this.geoTagger.placeName || "--";
+      }
+
+      downloadPhoto() {
+        if (!this.previewUrl) return;
+        const link = document.createElement("a");
+        link.href = this.previewUrl;
+        link.download = "geotagged-photo.jpg";
+        link.click();
+      }
+
+      downloadVideo() {
+        if (!this.videoUrl) return;
+        const link = document.createElement("a");
+        link.href = this.videoUrl;
+        link.download = "capture.webm";
+        link.click();
+      }
+
+      resetCapture() {
+        this.preview.src = "";
+        this.previewUrl = null;
+        this.rawImage = null;
+        this.downloadButton.disabled = true;
+        this.sendProofButton.disabled = true;
+        this.recaptureButton.disabled = true;
+        this.setStatus(this.exifStatus, "Ready");
+        this.timeDisplay.textContent = "--";
+        this.clearMessage();
+      }
+
+      async sendProof() {
+        if (!this.previewUrl || !this.geoTagger.coords) return;
+        const apiBase = this.apiBaseInput.value.trim();
+        const token = this.tokenInput.value.trim();
+
+        if (!apiBase) {
+          this.setMessage("Enter the API base URL before sending proof.", "error");
+          return;
+        }
+        if (!token) {
+          this.setMessage("Paste a valid JWT token to authenticate.", "error");
+          return;
+        }
+
+        try {
+          this.sendProofButton.disabled = true;
+          const payload = {
+            imageBase64: this.previewUrl,
+            proofType: "photo",
+            latitude: this.geoTagger.coords.latitude,
+            longitude: this.geoTagger.coords.longitude,
+            placeName: this.geoTagger.placeName || "Unknown location",
+            capturedAt: new Date().toISOString(),
+            exif: {
+              gpsLatRef: this.geoTagger.coords.latitude >= 0 ? "N" : "S",
+              gpsLngRef: this.geoTagger.coords.longitude >= 0 ? "E" : "W",
+              imageDescription: this.geoTagger.placeName || "Unknown location"
+            }
+          };
+
+          const response = await fetch(`${apiBase}/api/proofs`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const errorBody = await response.json().catch(() => ({}));
+            throw new Error(errorBody.error || "Unable to store proof.");
+          }
+
+          const result = await response.json();
+          this.setMessage(`Proof stored successfully. ID: ${result.proofId}`);
+        } catch (error) {
+          this.setMessage(error.message, "error");
+        } finally {
+          this.sendProofButton.disabled = false;
+        }
+      }
+
+      async sendVideoProof() {
+        if (!this.videoUrl || !this.geoTagger.coords) return;
+        const apiBase = this.apiBaseInput.value.trim();
+        const token = this.tokenInput.value.trim();
+
+        if (!apiBase) {
+          this.setMessage("Enter the API base URL before sending proof.", "error");
+          return;
+        }
+        if (!token) {
+          this.setMessage("Paste a valid JWT token to authenticate.", "error");
+          return;
+        }
+
+        try {
+          this.sendVideoButton.disabled = true;
+          const blob = await fetch(this.videoUrl).then((response) => response.blob());
+          const maxBytes = 14 * 1024 * 1024;
+          if (blob.size > maxBytes) {
+            throw new Error("Video is too large for MongoDB. Keep it under ~14MB.");
+          }
+          const base64 = await this.blobToBase64(blob);
+
+          const payload = {
+            videoBase64: base64,
+            videoMimeType: blob.type || "video/webm",
+            proofType: "video",
+            latitude: this.geoTagger.coords.latitude,
+            longitude: this.geoTagger.coords.longitude,
+            placeName: this.geoTagger.placeName || "Unknown location",
+            capturedAt: new Date().toISOString(),
+            exif: {
+              gpsLatRef: this.geoTagger.coords.latitude >= 0 ? "N" : "S",
+              gpsLngRef: this.geoTagger.coords.longitude >= 0 ? "E" : "W",
+              imageDescription: this.geoTagger.placeName || "Unknown location"
+            }
+          };
+
+          const response = await fetch(`${apiBase}/api/proofs`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const errorBody = await response.json().catch(() => ({}));
+            throw new Error(errorBody.error || "Unable to store video proof.");
+          }
+
+          const result = await response.json();
+          this.setMessage(`Video proof stored successfully. ID: ${result.proofId}`);
+        } catch (error) {
+          this.setMessage(error.message, "error");
+        } finally {
+          this.sendVideoButton.disabled = false;
+        }
+      }
+
+      blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error("Failed to read video data."));
+          reader.readAsDataURL(blob);
+        });
+      }
+    }
+
+    new CameraApp();
+  </script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forensic Auditor | GigShield AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #000000;
+            --secondary: #6B7280;
+            --surface: #F9FAFB;
+            --surface-container: #F3F4F6;
+            --accent: #2563EB;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--surface); color: var(--primary); }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(0,0,0,0.05); }
+        .neon-text { text-shadow: 0 0 10px rgba(37, 99, 235, 0.2); }
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            position: absolute;
+            top: 0;
+            animation: scan 3s linear infinite;
+        }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
+    </style>
+</head>
+<body class="antialiased" data-role="admin">
+    <script src="auth_guard.js"></script>
+
+    <!-- Top Navigation -->
+    <nav class="fixed top-0 w-full glass z-50 px-8 py-5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white font-black text-xl italic">G</div>
+            <span class="font-bold tracking-tighter text-xl">Forensic Auditor.</span>
+        </div>
+        <div class="hidden md:flex items-center gap-10">
+            <a href="worker_dashboard.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Dashboard</a>
+            <a href="assessment.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Risk Assessment</a>
+            <a href="results.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Forensic Ledger</a>
+            <a href="claims.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Claims</a>
+            <a href="payout.html" class="text-xs font-bold uppercase tracking-widest text-secondary hover:text-primary transition-colors">Settlement</a>
+            <a href="#" class="text-xs font-bold uppercase tracking-widest text-primary">Auditor Cockpit</a>
+            
+            <!-- Demo Mode Toggle -->
+            <button onclick="toggleDemoMode()" id="demoToggleBtn" class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 transition-all group">
+                <span id="demoIndicator" class="w-2 h-2 rounded-full bg-secondary transition-all"></span>
+                <span id="demoLabel" class="text-[0.6rem] font-bold uppercase tracking-widest text-secondary group-hover:text-amber-600 transition-colors">Simulation: Off</span>
+            </button>
+            <button onclick="logoutUser()" class="px-3 py-1.5 rounded-full border border-surface-container text-[0.6rem] font-black uppercase tracking-widest text-secondary hover:text-primary hover:border-primary/40 transition-all">
+                Logout
+            </button>
+        </div>
+    </nav>
+
+    <!-- Bottom Floating Navigation -->
+    <nav class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 glass px-8 py-4 rounded-full border border-surface-container shadow-2xl flex items-center gap-12" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px);">
+        <a href="worker_dashboard.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">hub</span>
+        </a>
+        <a href="assessment.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">policy</span>
+        </a>
+        <a href="results.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">receipt_long</span>
+        </a>
+        <a href="claims.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">history_edu</span>
+        </a>
+        <a href="payout.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">payments</span>
+        </a>
+        <a href="auditor.html" class="flex flex-col items-center justify-center text-primary transition-all">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">monitoring</span>
+        </a>
+        <div class="w-px h-6 bg-surface-container"></div>
+        <a href="portal.html" class="flex flex-col items-center justify-center text-secondary hover:text-primary transition-all">
+            <span class="material-symbols-outlined">logout</span>
+        </a>
+    </nav>
+
+    <main class="pt-32 px-8 max-w-7xl mx-auto pb-24">
+        
+        <!-- Header -->
+        <div class="mb-12">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-accent text-[0.6rem] font-black uppercase tracking-widest mb-4">
+                <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span> Satellite Uplink Active
+            </div>
+            <h1 class="text-5xl font-extrabold tracking-tighter">Global Volatility Feed.</h1>
+            <p class="text-secondary mt-4 max-w-xl text-lg">Real-time forensic monitoring of the gig-insurance grid. Multi-source oracle consensus verified.</p>
+        </div>
+
+        <!-- Metric Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12" id="metricCards">
+            <div class="glass p-6 rounded-2xl">
+                <p class="text-[0.6rem] font-black text-secondary uppercase tracking-widest mb-1">Global Risk Variance</p>
+                <p class="text-3xl font-black" id="riskScore">--</p>
+            </div>
+            <div class="glass p-6 rounded-2xl">
+                <p class="text-[0.6rem] font-black text-secondary uppercase tracking-widest mb-1">Oracle Consensus Rate</p>
+                <p class="text-3xl font-black text-green-600" id="approvalRate">--</p>
+            </div>
+            <div class="glass p-6 rounded-2xl">
+                <p class="text-[0.6rem] font-black text-secondary uppercase tracking-widest mb-1">Traffic Entropy</p>
+                <p class="text-3xl font-black" id="trafficDensity">--</p>
+            </div>
+            <div class="glass p-6 rounded-2xl">
+                <p class="text-[0.6rem] font-black text-secondary uppercase tracking-widest mb-1">Network Exposure</p>
+                <p class="text-3xl font-black" id="totalPayout">--</p>
+            </div>
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            
+            <!-- Left: Chart & Logs -->
+            <div class="lg:col-span-8 space-y-12">
+                <div class="glass p-10 rounded-3xl relative overflow-hidden">
+                    <div class="scanline"></div>
+                    <div class="flex justify-between items-center mb-8">
+                        <h3 class="text-sm font-black uppercase tracking-widest text-secondary">Kinematic Risk Trend</h3>
+                        <span class="text-[0.6rem] font-bold text-accent">30d WINDOW</span>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="riskChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass p-10 rounded-3xl">
+                    <h3 class="text-sm font-black uppercase tracking-widest text-secondary mb-8">Forensic Driver Registry</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-left border-b border-surface-container pb-4">
+                                    <th class="pb-4 text-[0.6rem] font-black uppercase tracking-widest text-secondary">Driver ID</th>
+                                    <th class="pb-4 text-[0.6rem] font-black uppercase tracking-widest text-secondary">Name</th>
+                                    <th class="pb-4 text-[0.6rem] font-black uppercase tracking-widest text-secondary text-center">Strikes</th>
+                                    <th class="pb-4 text-[0.6rem] font-black uppercase tracking-widest text-secondary text-center">History Score</th>
+                                    <th class="pb-4 text-[0.6rem] font-black uppercase tracking-widest text-secondary text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="driverRows" class="text-xs">
+                                <!-- Populated via API -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Oracle Status & Feed -->
+            <div class="lg:col-span-4 space-y-12">
+                <div class="glass p-8 rounded-3xl space-y-6">
+                    <h3 class="text-sm font-black uppercase tracking-widest text-secondary">Oracle Health</h3>
+                    <div id="oracleHealth" class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-secondary">Open-Meteo Satellite</span>
+                            <span class="text-[0.6rem] font-black text-green-600 uppercase">Online</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-secondary">Nominatim Geocoder</span>
+                            <span class="text-[0.6rem] font-black text-green-600 uppercase">Online</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass p-8 rounded-3xl">
+                    <h3 class="text-sm font-black uppercase tracking-widest text-secondary mb-6">Live Forensic Feed</h3>
+                    <div id="forensicLogs" class="space-y-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                        <!-- Entries added here -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        let riskChart;
+
+        async function initDashboard() {
+            try {
+                const response = await fetch('/api/dashboard');
+                const data = await response.json();
+
+                document.getElementById('riskScore').innerText = data.real_time_risk_score.toFixed(1);
+                document.getElementById('approvalRate').innerText = data.approval_rate.toFixed(1) + '%';
+                document.getElementById('trafficDensity').innerText = data.traffic_density.toFixed(1) + '%';
+                document.getElementById('totalPayout').innerText = '₹' + data.payout_exposure_inr.toLocaleString();
+
+                updateChart(data.risk_trend);
+                loadDrivers();
+                loadLogs();
+            } catch (err) {
+                console.error("Dashboard init failed:", err);
+            }
+        }
+
+        function updateChart(trend) {
+            const ctx = document.getElementById('riskChart').getContext('2d');
+            if (riskChart) riskChart.destroy();
+
+            riskChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: trend.map((_, i) => i),
+                    datasets: [{
+                        label: 'Risk Volatility',
+                        data: trend,
+                        borderColor: '#2563EB',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        fill: true,
+                        backgroundColor: 'rgba(37, 99, 235, 0.05)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { 
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { font: { size: 10, weight: 'bold' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadDrivers() {
+            const response = await fetch('/api/drivers');
+            const drivers = await response.json();
+            const container = document.getElementById('driverRows');
+
+            container.innerHTML = drivers.map(d => `
+                <tr class="border-b border-surface-container last:border-0 hover:bg-surface-container/50 transition-colors">
+                    <td class="py-4 font-black text-primary">${d.driver_id}</td>
+                    <td class="py-4 font-bold text-secondary">${d.display_name}</td>
+                    <td class="py-4 text-center font-black ${d.strikes > 0 ? 'text-red-500' : 'text-primary'}">${d.strikes}/3</td>
+                    <td class="py-4 text-center font-bold text-secondary">${d.forensic_history_score}%</td>
+                    <td class="py-4 text-right">
+                        <span class="px-2 py-1 rounded-full text-[0.5rem] font-black uppercase tracking-widest ${d.restricted ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">
+                            ${d.restricted ? 'LOCKED' : 'ACTIVE'}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadLogs() {
+            const response = await fetch('/api/claims');
+            const claims = await response.json();
+            const container = document.getElementById('forensicLogs');
+
+            container.innerHTML = claims.map(c => `
+                <div class="text-[0.65rem] font-mono border-l-2 ${c.status === 'APPROVED' ? 'border-green-500' : 'border-red-500'} pl-3 py-1">
+                    <span class="text-secondary">[${new Date(c.processed_at).toLocaleTimeString()}]</span>
+                    <span class="font-bold text-primary ml-2">${c.driver_id}</span>: 
+                    <span class="${c.status === 'APPROVED' ? 'text-green-600' : 'text-red-600'} font-black">${c.status}</span>
+                    <p class="text-secondary opacity-70 mt-1">${c.reason.slice(0, 80)}...</p>
+                </div>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', initDashboard);
+        setInterval(initDashboard, 10000); // Poll every 10s
+    </script>
+    <script>
+        // Demo Mode Sync & Toggle Logic
+        async function fetchDemoStatus() {
+            try {
+                const res = await fetch('/api/demo/status');
+                const data = await res.json();
+                updateDemoUI(data.demo_mode);
+            } catch (e) {}
+        }
+
+        async function toggleDemoMode() {
+            try {
+                const res = await fetch('/api/demo/toggle', { method: 'POST' });
+                const data = await res.json();
+                updateDemoUI(data.demo_mode);
+                alert(data.message);
+            } catch (e) {
+                alert("Simulation mode toggle failed.");
+            }
+        }
+
+        function updateDemoUI(isActive) {
+            const indicator = document.getElementById('demoIndicator');
+            const label = document.getElementById('demoLabel');
+            const btn = document.getElementById('demoToggleBtn');
+            if (!indicator || !label || !btn) return;
+
+            if (isActive) {
+                indicator.classList.remove('bg-secondary');
+                indicator.classList.add('bg-amber-500', 'animate-pulse');
+                label.innerText = 'Simulation: On';
+                label.classList.remove('text-secondary');
+                label.classList.add('text-amber-600');
+                btn.classList.add('border-amber-500/40', 'bg-amber-500/10');
+            } else {
+                indicator.classList.add('bg-secondary');
+                indicator.classList.remove('bg-amber-500', 'animate-pulse');
+                label.innerText = 'Simulation: Off';
+                label.classList.add('text-secondary');
+                label.classList.remove('text-amber-600');
+                btn.classList.remove('border-amber-500/40', 'bg-amber-500/10');
+            }
+        }
+
+        fetchDemoStatus();
+    </script>
+</body>
+</html>

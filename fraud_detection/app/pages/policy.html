@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GigShield | Forensic Policy</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <header class="cockpit-header">
+        <div class="brand">GIGSHIELD FORENSIC</div>
+        <nav class="nav-links">
+            <a href="/">HOME</a>
+            <a href="/dashboard">DASHBOARD</a>
+            <a href="/claims">CLAIMS</a>
+            <a href="/policy" class="active">POLICY</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="dashboard-grid" id="metric-cards">
+            <!-- Populated by app.js -->
+        </div>
+
+        <div style="margin-top: 20px;">
+            <div class="panel">
+                <h2 style="margin-bottom: 20px; color: var(--neon-amber);">Algorithmic Enforcement Logic</h2>
+                <div id="policy-content"
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <!-- Populated by app.js -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

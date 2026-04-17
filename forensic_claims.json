@@ -1,0 +1,52 @@
+[
+    {
+        "claim_id": "BC03B9F0",
+        "status": "APPROVED",
+        "payout_amount": 450,
+        "audit_verdict": "Forensic consensus verified via oracle grid.",
+        "city": "Mumbai",
+        "platform": "Swiggy",
+        "reason": "Heavy Rainfall (>5mm/h)",
+        "timestamp": "2026-04-04T06:25:31.504Z"
+    },
+    {
+        "claim_id": "1FA1E238",
+        "status": "APPROVED",
+        "payout_amount": 450,
+        "audit_verdict": "Forensic consensus verified via oracle grid.",
+        "city": "Kattangulathur",
+        "platform": "Swiggy",
+        "reason": "Heavy Rainfall (>5mm/h)",
+        "timestamp": "2026-04-04T06:34:51.459Z"
+    },
+    {
+        "claim_id": "C4D8D51B",
+        "status": "APPROVED",
+        "payout_amount": 450,
+        "audit_verdict": "Forensic consensus verified via oracle grid.",
+        "city": "Kattangulathur",
+        "platform": "Swiggy",
+        "reason": "Heavy Rainfall (>5mm/h)",
+        "timestamp": "2026-04-04T06:38:15.682Z"
+    },
+    {
+        "claim_id": "CA49BF03",
+        "status": "APPROVED",
+        "payout_amount": 450,
+        "audit_verdict": "Forensic consensus verified via oracle grid.",
+        "city": "Kattangulathur",
+        "platform": "Swiggy",
+        "reason": "Severe Traffic Congestion",
+        "timestamp": "2026-04-04T06:38:27.885Z"
+    },
+    {
+        "claim_id": "5C823759",
+        "status": "APPROVED",
+        "payout_amount": 450,
+        "audit_verdict": "Forensic consensus verified via oracle grid.",
+        "city": "Chennai",
+        "platform": "Swiggy",
+        "reason": "Extreme Rain Alert (>5mm/hr)",
+        "timestamp": "2026-04-04T12:21:08Z"
+    }
+]

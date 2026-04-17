@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Admin Login | GigShield AI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#0d9488",
+                        adminInk: "#0f172a",
+                        adminGlow: "#f8fafc",
+                        adminMuted: "#64748b",
+                        adminPanel: "#0b1220",
+                    },
+                    borderRadius: {
+                        xl: "1.5rem",
+                        full: "9999px",
+                    },
+                    fontFamily: {
+                        sans: ["Space Grotesk", "sans-serif"],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: radial-gradient(circle at 15% 20%, rgba(15, 23, 42, 0.08), transparent 45%),
+                        radial-gradient(circle at 85% 10%, rgba(13, 148, 136, 0.16), transparent 45%),
+                        #f4f6fb;
+            color: #0f172a;
+        }
+        .admin-card {
+            background: linear-gradient(135deg, rgba(11, 18, 32, 0.98), rgba(15, 23, 42, 0.96));
+            color: #f8fafc;
+            border: 1px solid rgba(15, 23, 42, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <main class="min-h-screen flex items-center justify-center px-6 py-16">
+        <div class="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-10 items-center">
+            <section class="space-y-6">
+                <a href="index.html" class="inline-flex items-center gap-2 text-[0.65rem] font-black uppercase tracking-widest text-adminMuted hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-sm">arrow_back</span>
+                    Back to landing
+                </a>
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-white text-adminInk text-[0.65rem] font-extrabold uppercase tracking-[0.2em] rounded-full shadow-sm">
+                    Admin Access
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight">Operations console sign-in.</h1>
+                <p class="text-base text-adminMuted max-w-md">
+                    Monitor claims, risk zones, and review queues from the secure admin console.
+                </p>
+                <div class="flex items-center gap-3 text-sm text-adminMuted">
+                    <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+                    Restricted access for operations teams.
+                </div>
+            </section>
+
+            <section class="admin-card rounded-2xl p-8 shadow-2xl">
+                <form id="adminLoginForm" class="space-y-5">
+                    <div class="space-y-2">
+                        <label class="text-[0.65rem] font-extrabold uppercase tracking-widest text-adminGlow">Admin Email</label>
+                        <input id="adminEmailInput" type="email" placeholder="ops@gigshield.ai" class="w-full rounded-xl bg-adminPanel border border-slate-700 px-4 py-3 text-sm font-semibold text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/60" required />
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[0.65rem] font-extrabold uppercase tracking-widest text-adminGlow">Access Key</label>
+                        <input id="adminKeyInput" type="password" placeholder="••••••••" class="w-full rounded-xl bg-adminPanel border border-slate-700 px-4 py-3 text-sm font-semibold text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/60" required />
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[0.65rem] font-extrabold uppercase tracking-widest text-adminGlow">OTP Code</label>
+                        <div class="flex flex-col gap-3 sm:flex-row">
+                            <input id="adminOtpInput" type="text" inputmode="numeric" placeholder="6-digit code" class="w-full rounded-xl bg-adminPanel border border-slate-700 px-4 py-3 text-sm font-semibold text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/60" required />
+                            <button type="button" id="sendAdminOtpBtn" class="px-5 py-3 bg-white/10 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/20 transition-all">
+                                Send OTP
+                            </button>
+                        </div>
+                        <p id="adminOtpStatus" class="text-[0.6rem] text-adminMuted">Use your email to request an OTP.</p>
+                    </div>
+                    <button type="submit" class="w-full py-3.5 bg-primary text-white rounded-full font-extrabold text-sm uppercase tracking-widest shadow-lg hover:brightness-110 transition-all">
+                        Verify & Continue
+                    </button>
+                    <div class="flex items-center justify-between text-[0.6rem] font-bold uppercase tracking-widest text-adminMuted">
+                        <span>Need rider access?</span>
+                        <a href="portal.html" class="text-white hover:underline">Back to portal</a>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const adminForm = document.getElementById('adminLoginForm');
+        const sendAdminOtpBtn = document.getElementById('sendAdminOtpBtn');
+        const adminOtpStatus = document.getElementById('adminOtpStatus');
+
+        async function requestAdminOtp() {
+            const email = document.getElementById('adminEmailInput').value.trim();
+            if (!email) {
+                adminOtpStatus.innerText = 'Enter your admin email first.';
+                return;
+            }
+            sendAdminOtpBtn.disabled = true;
+            sendAdminOtpBtn.innerText = 'Sending...';
+            adminOtpStatus.innerText = 'Sending OTP...';
+
+            try {
+                const res = await fetch('/api/auth/request-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: 'admin', identifier: email })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    adminOtpStatus.innerText = data.detail || 'OTP request failed.';
+                } else if (data.otp_debug) {
+                    adminOtpStatus.innerText = `OTP (demo): ${data.otp_debug}`;
+                } else {
+                    adminOtpStatus.innerText = 'OTP sent. Check your email.';
+                }
+            } catch (err) {
+                adminOtpStatus.innerText = 'OTP request failed. Try again.';
+            } finally {
+                sendAdminOtpBtn.disabled = false;
+                sendAdminOtpBtn.innerText = 'Send OTP';
+            }
+        }
+
+        sendAdminOtpBtn.addEventListener('click', requestAdminOtp);
+
+        adminForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const email = document.getElementById('adminEmailInput').value.trim();
+            const accessKey = document.getElementById('adminKeyInput').value.trim();
+            const otp = document.getElementById('adminOtpInput').value.trim();
+
+            if (!email || !otp) {
+                adminOtpStatus.innerText = 'Enter your email and OTP.';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: 'admin', identifier: email, otp, access_key: accessKey })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.verified) {
+                    adminOtpStatus.innerText = data.detail || 'OTP verification failed.';
+                    return;
+                }
+
+                sessionStorage.setItem('portalRole', 'admin');
+                sessionStorage.setItem('adminEmail', email);
+                sessionStorage.setItem('authToken', data.token || '');
+                sessionStorage.removeItem('riderName');
+
+                const params = new URLSearchParams(window.location.search);
+                const redirect = params.get('redirect') || 'admin_dashboard.html';
+                window.location.href = redirect;
+            } catch (err) {
+                adminOtpStatus.innerText = 'OTP verification failed. Try again.';
+            }
+        });
+    </script>
+</body>
+</html>
