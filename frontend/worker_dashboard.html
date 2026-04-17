@@ -386,6 +386,7 @@
                 'traffic_gridlock': 'traffic',
                 'heatwave': 'thermostat',
                 'clear': 'wb_sunny',
+                'simulation_override': 'science',
             };
             return map[event] || 'thunderstorm';
         }
@@ -394,26 +395,23 @@
             const modal = document.getElementById('simModal');
             const container = document.getElementById('simSteps');
             const footer = document.getElementById('simFooter');
+            const footerBtn = footer.querySelector('button');
+            
+            // RESET STATE
             container.innerHTML = '';
             footer.classList.add('hidden');
+            footerBtn.className = 'w-full py-4 bg-surface-container text-on-surface rounded-full font-extrabold text-lg shadow-sm hover:brightness-95 active:scale-95 transition-all flex items-center justify-center gap-2';
+            footerBtn.innerHTML = '<span class="material-symbols-outlined">info</span> Pipeline Stopped';
             modal.classList.remove('hidden');
 
-            // Step 1: Show "enabling simulation mode"
-            addSimStep(container, 0, 'settings', 'text-blue-500', 'bg-blue-50', 'Initializing Simulation Engine', 'Enabling simulation mode...', null, true);
-
-            // Ensure simulation mode is ON
-            try {
-                const statusRes = await fetch('/api/demo/status');
-                const statusData = await statusRes.json();
-                if (!statusData.demo_mode) {
-                    await fetch('/api/demo/toggle', { method: 'POST' });
-                }
-            } catch(e) {}
-
-            await delay(600);
+            // Step 1: Initialize Disbursement Engine
+            addSimStep(container, 0, 'settings', 'text-blue-500', 'bg-blue-50', 'GigShield AI Disbursement Engine', 'Initializing core forensic pipeline...', null, true);
+            await delay(800);
 
             // Step 2: Oracle scan
             addSimStep(container, 1, 'radar', 'text-amber-500', 'bg-amber-50', 'Oracle Disruption Scan', 'Querying live environmental oracle...', null, true);
+            await delay(600);
+
             await delay(600);
 
             // Step 3: Call the real simulation API
@@ -574,11 +572,15 @@
                 label.classList.remove('text-amber-600');
                 label.classList.add('text-secondary');
             }
+            loadOracleDisruption();
         }
 
         // ── Oracle-Driven Active Disruption Card ──
         async function loadOracleDisruption() {
             const card = document.getElementById('activeDisruptionCard');
+            const demoIndicator = document.getElementById('demoIndicator');
+            const isSimulationActive = demoIndicator && demoIndicator.classList.contains('bg-amber-500');
+
             try {
                 const res = await fetch('/api/oracle/disruption?city=Chennai&zone_id=Velachery');
                 const oracle = await res.json();
@@ -590,25 +592,30 @@
                 const env = oracle.environmental_data || {};
                 const rainfall = env.rainfall_forecast_mm || 0;
                 
-                if (trigger && severity >= 0.15) {
+                // Only show "Active Disruption" if simulation mode is ON and oracle matches
+                if (isSimulationActive && trigger && severity >= 0.15) {
                     // Active disruption — red alert card
                     const sevPct = (severity * 100).toFixed(0);
-                    card.className = 'bg-white rounded-xl p-6 border border-red-200 shadow-sm relative overflow-hidden';
+                    card.className = 'bg-white rounded-xl p-6 border border-red-200 shadow-sm relative overflow-hidden animate-pulse-slow';
                     card.innerHTML = `
                         <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-orange-500 to-red-500 shimmer-bg"></div>
                         <div class="flex items-start justify-between">
                             <div class="flex items-start gap-4">
-                                <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0 mt-1">
+                                <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0 mt-1 relative">
+                                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                    </span>
                                     <span class="material-symbols-outlined text-red-500 text-2xl" style="font-variation-settings: 'FILL' 1;">${icon}</span>
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-2 mb-1">
-                                        <div class="w-2.5 h-2.5 rounded-full bg-red-500 pulse-ring"></div>
-                                        <span class="text-[0.55rem] font-black uppercase tracking-widest text-red-600">LIVE</span>
+                                        <div class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>
+                                        <span class="text-[0.55rem] font-black uppercase tracking-widest text-red-600">LIVE CALAMITY</span>
                                         <span class="px-2 py-0.5 bg-red-100 text-red-700 text-[0.5rem] font-black uppercase rounded-full">${sevPct}% SEV</span>
                                     </div>
                                     <h3 class="text-lg font-extrabold tracking-tight">${eventDisplay} — Velachery</h3>
-                                    <p class="text-sm text-on-surface-variant mt-1">${rainfall.toFixed(1)}mm/hr precipitation detected. Delivery disruptions expected in your active zone.</p>
+                                    <p class="text-sm text-on-surface-variant mt-1">${rainfall.toFixed(1)}mm/hr precipitation detected. Real-time oracle scan finds disruption risk is active.</p>
                                 </div>
                             </div>
                             <span class="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-[0.55rem] font-black uppercase tracking-widest rounded-full whitespace-nowrap flex-shrink-0">
@@ -616,27 +623,30 @@
                             </span>
                         </div>
                     `;
+
                 } else {
-                    // No active disruption — calm card
+                    // No active disruption OR simulation not active — calm card
                     card.className = 'bg-white rounded-xl p-6 border border-surface-container shadow-sm relative overflow-hidden';
                     card.innerHTML = `
-                        <div class="flex items-start gap-4">
-                            <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0 mt-1">
-                                <span class="material-symbols-outlined text-emerald-500 text-2xl" style="font-variation-settings: 'FILL' 1;">wb_sunny</span>
-                            </div>
-                            <div>
-                                <div class="flex items-center gap-2 mb-1">
-                                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                                    <span class="text-[0.55rem] font-black uppercase tracking-widest text-emerald-600">CLEAR</span>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                                    <span class="material-symbols-outlined text-emerald-600 text-2xl" style="font-variation-settings: 'FILL' 1;">radar</span>
                                 </div>
-                                <h3 class="text-lg font-extrabold tracking-tight">No Active Disruptions</h3>
-                                <p class="text-sm text-on-surface-variant mt-1">Oracle reports normal conditions. Oracle event: ${eventDisplay} (${(severity * 100).toFixed(0)}% severity).</p>
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                        <span class="text-[0.55rem] font-bold uppercase tracking-widest text-secondary">Scanner Active</span>
+                                    </div>
+                                    <h3 class="text-lg font-extrabold tracking-tight">No Active Disruptions</h3>
+                                    <p class="text-xs text-on-surface-variant mt-1">GigShield Oracle monitoring Velachery for real-time environmental threats.</p>
+                                </div>
                             </div>
                         </div>
                     `;
                 }
-            } catch(e) {
-                card.innerHTML = '<p class="text-xs text-secondary font-bold uppercase tracking-widest opacity-50 text-center py-4">Oracle scan unavailable</p>';
+            } catch (e) {
+                card.innerHTML = `<div class="p-4 text-center text-xs text-secondary italic">Oracle Connection Lost. Retrying...</div>`;
             }
         }
 
@@ -653,9 +663,10 @@
         syncSimulationStatus();
         loadDashboardData();
         loadOracleDisruption();
-        // Refresh oracle data every 60 seconds
-        setInterval(loadOracleDisruption, 60000);
+        // Refresh oracle data every 30 seconds for real-time accuracy
+        setInterval(loadOracleDisruption, 30000);
     </script>
+
 
 </body>
 </html>

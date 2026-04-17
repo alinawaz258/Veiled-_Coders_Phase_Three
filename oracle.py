@@ -161,6 +161,49 @@ class OracleService:
         return round(min(final_risk, 1.0), 4)
 
     @classmethod
+    def get_weekly_forecast(cls, city: str) -> Dict[str, Any]:
+        """Fetch 7-day weather forecast for a city."""
+        city_lower = city.strip().lower()
+        try:
+            lat, lon = cls._geocode_location(city)
+            params = {
+                "latitude": lat, "longitude": lon,
+                "daily": "precipitation_sum,temperature_2m_max,weather_code",
+                "timezone": "auto"
+            }
+            url = f"https://api.open-meteo.com/v1/forecast?{urllib.parse.urlencode(params)}"
+            req = Request(url)
+            with urlopen(req, timeout=10) as response:
+                data = json.loads(response.read().decode("utf-8"))
+                daily = data.get("daily", {})
+                
+                forecast = []
+                for i in range(len(daily.get("time", []))):
+                    date_str = daily["time"][i]
+                    precip = daily["precipitation_sum"][i]
+                    temp = daily["temperature_2m_max"][i]
+                    code = daily["weather_code"][i]
+                    
+                    threat = "Clear"
+                    if precip > 15: threat = "Heavy Rain"
+                    elif precip > 5: threat = "Rain"
+                    elif temp > 40: threat = "Heatwave"
+                    
+                    forecast.append({
+                        "date": date_str,
+                        "precipitation": precip,
+                        "max_temp": temp,
+                        "threat": threat
+                    })
+                return {
+                    "city": city,
+                    "forecast": forecast
+                }
+        except Exception as e:
+            LOGGER.error("Weekly forecast failed for %s: %s", city, e)
+            return {"city": city, "forecast": [], "error": str(e)}
+
+    @classmethod
     def get_oracle_disruption(cls, city: str, zone_id: str = "") -> Dict[str, Any]:
         """Oracle-driven disruption detection.
 
@@ -201,9 +244,10 @@ class OracleService:
         elif rainfall >= 5:
             event = "moderate_rain"
             severity = 0.2 + rainfall * 0.01
-        elif flood_risk >= 0.6:
+        elif flood_risk >= 0.6 and rainfall > 0:
             event = "flood_warning"
             severity = flood_risk
+
         elif traffic_idx >= 0.85:
             event = "traffic_gridlock"
             severity = traffic_idx * 0.8
@@ -213,15 +257,21 @@ class OracleService:
         elif rainfall >= 1:
             event = "light_rain"
             severity = 0.15 + rainfall * 0.005
+        else:
+            event = "clear"
+            severity = 0.0
 
-        # Zone modifier — known high-risk zones get a bump
-        zone_lower = zone_id.strip().lower()
-        zone_bumps = {"velachery": 0.08, "andheri": 0.06, "bandra": 0.05}
-        severity += zone_bumps.get(zone_lower, 0.0)
+        # Zone modifier — known high-risk zones only if there's an actual event
+        if event != "clear":
+            zone_lower = zone_id.strip().lower()
+            zone_bumps = {"velachery": 0.08, "andheri": 0.06, "bandra": 0.05}
+            severity += zone_bumps.get(zone_lower, 0.0)
+        
         severity = round(min(max(severity, 0.0), 1.0), 4)
 
         # Trigger threshold — disruption warrants a claim pipeline
-        trigger = severity >= 0.15
+        trigger = severity >= 0.15 and event != "clear"
+
 
         return {
             "event": event,

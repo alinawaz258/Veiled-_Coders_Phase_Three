@@ -378,9 +378,9 @@ class GigShieldConsensusEngine:
         
         if oracle_error and not self.demo_mode:
             reason = "Forensic Hold: Oracle connection unavailable. Please retry shortly."
-        elif self.demo_mode:
+        elif self.demo_mode and getattr(claim, 'demo_reason_override', None):
             is_consensus_pass = True
-            reason = "[Demo Mode Active] Forensic consensus forced to PASS."
+            reason = f"[Simulation Override] {claim.demo_reason_override}"
         elif forensic_flag:
             reason = forensic_flag
         elif claim.category == DisruptionCategory.rain:
@@ -400,7 +400,7 @@ class GigShieldConsensusEngine:
                 reason = f"Forensic Alert: Social disruption index ({oracle.social_disruption_score}%) insufficient for claim support."
 
         # Apply historical weather flag as additional fraud signal
-        if historical_weather_check and historical_weather_check.get("historical_flag") and is_consensus_pass and not self.demo_mode:
+        if historical_weather_check and historical_weather_check.get("historical_flag") and is_consensus_pass and not getattr(claim, 'demo_reason_override', None):
             reason += f" [Historical Weather Alert: {historical_weather_check['reason']}]"
 
         status = ClaimStatus.denied
@@ -420,14 +420,15 @@ class GigShieldConsensusEngine:
             reason = "Forensic Lock: Account restricted due to prior fraud strikes."
             driver.denied_claims += 1
             approved_hours = 0.0
-        elif self.demo_mode:
+        elif self.demo_mode and getattr(claim, 'demo_reason_override', None):
             status = ClaimStatus.approved
             payout = round(_dp * _we * 0.2, 2)
             payout = max(payout, 50.0)
-            reason = claim.demo_reason_override if claim.demo_reason_override else reason
+            reason = claim.demo_reason_override
             driver.approved_claims += 1
         elif is_consensus_pass:
             status = ClaimStatus.approved
+
             payout = round(_dp * _we * 0.2, 2)
             payout = max(payout, 50.0)
             reason = f"Consensus Verified: '{claim.category.value}' confirmed via real-time telemetry."
