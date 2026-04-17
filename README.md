@@ -11,6 +11,9 @@
 ┌──────────────────────────────────────────────────────────────┐
 │                     FastAPI Service (app.py)                  │
 │                                                              │
+│  GET /api/oracle/disruption ─ Oracle Service (oracle.py)     │
+│                                 └─ Geocoding & Weather APIs  │
+│                                                              │
 │  POST /risk/score ──┬── ML Model (model.py)                 │
 │                     │   └─ GradientBoosting + 5-fold CV      │
 │                     ├── Risk Engine (risk_engine.py)          │
@@ -20,6 +23,8 @@
 │                     │   └─ IRDAI regulatory policy terms      │
 │                     └── Explainability                        │
 │                         └─ Per-prediction feature contrib.    │
+│                                                              │
+│  POST /api/demo/simulate ─ Automated end-to-end pipeline     │
 │                                                              │
 │  GET  /model/metrics ─── Model lineage & performance         │
 │  GET  /regulatory/exclusions ─── Coverage exclusion list     │
@@ -34,11 +39,14 @@
 gigshield_ai/
 ├── app.py               # FastAPI endpoints & lifespan
 ├── model.py             # ML model: training, CV, inference, explainability
+├── oracle.py            # Real-time Oracle integration (weather, constraints, traffic)
 ├── risk_engine.py       # Risk scoring, premium, fraud, regulatory logic
 ├── schemas.py           # Pydantic request / response schemas
 ├── utils.py             # Shared helpers (logging, clamp, safe_ratio)
 ├── train_model.py       # Standalone training entrypoint
 ├── requirements.txt     # Python dependencies
+├── fraud_detection/     # Forensic & ledger components
+├── frontend/            # Worker & Admin dashboard UI
 └── saved_model/
     ├── risk_model.pkl           # Trained model artifact
     ├── feature_importance.csv   # Feature importance rankings
@@ -128,10 +136,12 @@ curl -X POST "http://127.0.0.1:8000/risk/score" \
 }
 ```
 
-## AI / ML Approach
+## AI / ML Approach & Oracle Integration
 
 | Aspect              | Detail                                                       |
 |---------------------|--------------------------------------------------------------|
+| **Oracle Signal**   | `oracle.py` fetches live data (weather, traffic, floods) to validate events |
+| **Trigger Gate**    | Oracle dictates if a disruption event is severe enough to trigger payout |
 | **Algorithm**       | GradientBoostingRegressor (sklearn) with tuned hyperparams   |
 | **Validation**      | 5-fold cross-validation on training set                      |
 | **Metrics**         | R², MAE, RMSE on held-out test set                           |

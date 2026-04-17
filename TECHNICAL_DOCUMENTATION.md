@@ -564,15 +564,17 @@ Standalone per-rider dashboard designed for the delivery worker persona.
 - Falls back to hardcoded demo data if API unavailable
 
 **Simulate Disruption Flow** (the demo "money shot"):
-A modal with a 5-step animated pipeline, each step appearing with 800ms delay:
+A modal with an animated pipeline, each step appearing with an 800ms delay:
 ```
-Step 1: ⛈ Heavy Rain Triggered — 12mm/hr detected in Velachery
-Step 2: 📄 Claim Auto-Filed — Parametric trigger matched
-Step 3: ✅ Fraud Check: PASSED — Dual-layer consensus complete [CLEAN badge]
-Step 4: 💰 Payout Initiated: ₹225 — Transferred via UPI
-Step 5: 🧾 UTR: GIGSHLD174491283... — Transaction confirmed [CONFIRMED badge]
+Step 1: 📡 Oracle Disruption Scan — Querying live environmental oracle...
+Step 2: ⛈ [Dynamic Event] Detected — e.g. Flood Warning (78% SEV)
+Step 3: 📈 Risk Score: 31.7% — ML probability + Oracle enhancement
+Step 4: 📄 Claim Auto-Filed — Parametric trigger matched
+Step 5: ✅ Fraud Check: PASSED — Dual-layer consensus complete [CLEAN badge]
+Step 6: 💰 Payout Approved: ₹380 — ML-computed coverage disbursed
+Step 7: 🧾 UTR: GIGSHLD174491283... — Transaction confirmed [CONFIRMED badge]
 ```
-After the final step, a "Payout Complete — ₹225 Credited" success button animates in.
+After the final step, a "Payout Complete — ₹380 Credited" success button animates in, and the "Active Disruptions" card is dynamically updated with the Oracle's data. If the Oracle reports 'Clear', the simulation gracefully aborts with a 'NO_DISRUPTION' state.
 
 ### 11.4 Admin Dashboard (`admin_dashboard.html`) — v3.1 NEW
 Insurer operations view for portfolio-level visibility.
@@ -898,6 +900,7 @@ python -m pytest test_scenarios.py -v
 
 ### v3.1.0 (Current)
 - Completed Phase 3 Implementation (Worker & Admin Dashboards)
+- Fully Integrated Oracle service (`oracle.py`) replacing simulated/hardcoded disruption events with dynamic real-time data API
 - Integrated Razorpay Sandbox for payouts with enhanced mock fallback & UTR display
 - Added historical weather fraud checks against static pincode baselines
 - Added hyper-local zone pricing (₹1–₹5 micro-adjustments)
@@ -908,6 +911,7 @@ python -m pytest test_scenarios.py -v
 - Improved claims UX: UPI modal + success screen
 - Dynamic dashboard stats from live API
 - Removed hardcoded SSL paths
+- Added dynamic frontend endpoints (`/api/oracle/disruption`, `/api/demo/simulate`) to stream live disruption and risk evaluation data directly to the user interfaces
 
 ### v3.0.0
 - ML model as primary decision-maker
